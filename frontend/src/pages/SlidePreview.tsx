@@ -34,6 +34,7 @@ export const SlidePreview: React.FC = () => {
     exportPDF,
     isGlobalLoading,
     taskProgress,
+    pageGeneratingTasks,
   } = useProjectStore();
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -111,20 +112,18 @@ export const SlidePreview: React.FC = () => {
     const page = currentProject.pages[selectedIndex];
     if (!page.id) return;
     
+    // 如果该页面正在生成，不重复提交
+    if (pageGeneratingTasks[page.id]) {
+      show({ message: '该页面正在生成中，请稍候...', type: 'info' });
+      return;
+    }
+    
     // 如果已有图片，需要传递 force_regenerate=true
     const hasImage = !!page.generated_image_path;
     
     try {
       await generatePageImage(page.id, hasImage);
-      // 重新加载版本列表
-      if (projectId) {
-        const response = await getPageImageVersions(projectId, page.id);
-        if (response.data?.versions) {
-          setImageVersions(response.data.versions);
-        }
-      }
-      await syncProject(projectId || currentProject.id);
-      show({ message: '图片生成成功', type: 'success' });
+      show({ message: '已开始生成图片，请稍候...', type: 'success' });
     } catch (error: any) {
       show({ 
         message: `生成失败: ${error.message || '未知错误'}`, 
@@ -328,6 +327,7 @@ export const SlidePreview: React.FC = () => {
                   handleEditPage();
                 }}
                 onDelete={() => page.id && deletePageById(page.id)}
+                isGenerating={page.id ? !!pageGeneratingTasks[page.id] : false}
               />
             ))}
           </div>
@@ -370,11 +370,14 @@ export const SlidePreview: React.FC = () => {
                         <div className="text-center">
                           <div className="text-6xl mb-4">🖼️</div>
                           <p className="text-gray-500 mb-4">
-                            {selectedPage?.status === 'GENERATING'
+                            {selectedPage?.id && pageGeneratingTasks[selectedPage.id]
+                              ? '正在生成中...'
+                              : selectedPage?.status === 'GENERATING'
                               ? '正在生成中...'
                               : '尚未生成图片'}
                           </p>
-                          {selectedPage?.status !== 'GENERATING' && (
+                          {(!selectedPage?.id || !pageGeneratingTasks[selectedPage.id]) && 
+                           selectedPage?.status !== 'GENERATING' && (
                             <Button
                               variant="primary"
                               onClick={handleRegeneratePage}
@@ -480,8 +483,11 @@ export const SlidePreview: React.FC = () => {
                       variant="ghost"
                       size="sm"
                       onClick={handleRegeneratePage}
+                      disabled={selectedPage?.id && pageGeneratingTasks[selectedPage.id] ? true : false}
                     >
-                      重新生成
+                      {selectedPage?.id && pageGeneratingTasks[selectedPage.id]
+                        ? '生成中...'
+                        : '重新生成'}
                     </Button>
                   </div>
                 </div>

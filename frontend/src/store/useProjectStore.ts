@@ -10,6 +10,8 @@ interface ProjectState {
   activeTaskId: string | null;
   taskProgress: { total: number; completed: number } | null;
   error: string | null;
+  // 每个页面的生成任务ID映射 (pageId -> taskId)
+  pageGeneratingTasks: Record<string, string>;
 
   // Actions
   setCurrentProject: (project: Project | null) => void;
@@ -66,6 +68,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   activeTaskId: null,
   taskProgress: null,
   error: null,
+  pageGeneratingTasks: {},
 
   // Setters
   setCurrentProject: (project) => set({ currentProject: project }),
@@ -409,22 +412,114 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     await startAsyncTask(() => api.generateImages(currentProject.id));
   },
 
-  // 生成单页图片
+  // 生成单页图片（异步）
   generatePageImage: async (pageId, forceRegenerate = false) => {
-    const { currentProject } = get();
+    const { currentProject, pageGeneratingTasks } = get();
     if (!currentProject) return;
 
-    set({ isGlobalLoading: true, error: null });
-    try {
-      await api.generatePageImage(currentProject.id, pageId, forceRegenerate);
-      // 刷新项目数据
-      await get().syncProject();
-    } catch (error: any) {
-      set({ error: error.message || '生成图片失败' });
-      throw error;
-    } finally {
-      set({ isGlobalLoading: false });
+    // 如果该页面正在生成，不重复提交
+    if (pageGeneratingTasks[pageId]) {
+      console.log(`[生成] 页面 ${pageId} 正在生成中，跳过重复请求`);
+      return;
     }
+
+    set({ error: null });
+    try {
+      const response = await api.generatePageImage(currentProject.id, pageId, forceRegenerate);
+      const taskId = response.data?.task_id;
+      
+      if (taskId) {
+        // 记录该页面的任务ID
+        set({ 
+          pageGeneratingTasks: { ...pageGeneratingTasks, [pageId]: taskId }
+        });
+        
+        // 立即同步一次项目数据，以获取后端设置的'GENERATING'状态
+        await get().syncProject();
+        
+        // 开始轮询该页面的任务状态
+        await get().pollPageTask(pageId, taskId);
+      } else {
+        // 如果没有返回task_id，可能是同步接口，直接刷新
+        await get().syncProject();
+      }
+    } catch (error: any) {
+      // 清除该页面的任务记录
+      const { pageGeneratingTasks } = get();
+      const newTasks = { ...pageGeneratingTasks };
+      delete newTasks[pageId];
+      set({ pageGeneratingTasks: newTasks, error: error.message || '生成图片失败' });
+      throw error;
+    }
+  },
+
+  // 轮询单个页面的任务状态
+  pollPageTask: async (pageId: string, taskId: string) => {
+    const { currentProject } = get();
+    if (!currentProject) {
+      console.warn('[轮询] 没有当前项目，停止轮询');
+      return;
+    }
+
+    const poll = async () => {
+      try {
+        const response = await api.getTaskStatus(currentProject.id!, taskId);
+        const task = response.data;
+        
+        if (!task) {
+          console.warn('[轮询] 响应中没有任务数据');
+          return;
+        }
+
+        console.log(`[轮询] Page ${pageId} Task ${taskId} 状态: ${task.status}`);
+
+        // 检查任务状态
+        if (task.status === 'COMPLETED') {
+          console.log(`[轮询] Page ${pageId} 任务已完成，刷新项目数据`);
+          // 清除该页面的任务记录
+          const { pageGeneratingTasks } = get();
+          const newTasks = { ...pageGeneratingTasks };
+          delete newTasks[pageId];
+          set({ pageGeneratingTasks: newTasks });
+          // 刷新项目数据
+          await get().syncProject();
+        } else if (task.status === 'FAILED') {
+          console.error(`[轮询] Page ${pageId} 任务失败:`, task.error_message || task.error);
+          // 清除该页面的任务记录
+          const { pageGeneratingTasks } = get();
+          const newTasks = { ...pageGeneratingTasks };
+          delete newTasks[pageId];
+          set({ 
+            pageGeneratingTasks: newTasks,
+            error: task.error_message || task.error || '生成失败'
+          });
+          // 刷新项目数据以更新页面状态
+          await get().syncProject();
+        } else if (task.status === 'PENDING' || task.status === 'PROCESSING') {
+          // 继续轮询，同时同步项目数据以更新页面状态
+          console.log(`[轮询] Page ${pageId} 处理中，同步项目数据...`);
+          await get().syncProject();
+          console.log(`[轮询] Page ${pageId} 处理中，2秒后继续轮询...`);
+          setTimeout(poll, 2000);
+        } else {
+          // 未知状态，停止轮询
+          console.warn(`[轮询] Page ${pageId} 未知状态: ${task.status}，停止轮询`);
+          const { pageGeneratingTasks } = get();
+          const newTasks = { ...pageGeneratingTasks };
+          delete newTasks[pageId];
+          set({ pageGeneratingTasks: newTasks });
+        }
+      } catch (error: any) {
+        console.error('页面任务轮询错误:', error);
+        // 清除该页面的任务记录
+        const { pageGeneratingTasks } = get();
+        const newTasks = { ...pageGeneratingTasks };
+        delete newTasks[pageId];
+        set({ pageGeneratingTasks: newTasks });
+      }
+    };
+
+    await poll();
   },
 
   // 编辑页面图片

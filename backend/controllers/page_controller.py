@@ -1,10 +1,11 @@
 """
 Page Controller - handles page-related endpoints
 """
-from flask import Blueprint, request
-from models import db, Project, Page, PageImageVersion
+from flask import Blueprint, request, current_app
+from models import db, Project, Page, PageImageVersion, Task
 from utils import success_response, error_response, not_found, bad_request
 from services import AIService, FileService
+from services.task_manager import task_manager, generate_single_page_image_task
 from datetime import datetime
 
 page_bp = Blueprint('pages', __name__, url_prefix='/api/projects')
@@ -386,63 +387,45 @@ def generate_page_image(project_id, page_id):
                 additional_ref_images = image_urls
                 has_material_images = True
         
-        prompt = ai_service.generate_image_prompt(
-            outline,
-            page_data,
-            desc_text,
-            page.order_index + 1,
-            has_material_images=has_material_images,
-            extra_requirements=project.extra_requirements
+        # Create async task for image generation
+        task = Task(
+            project_id=project_id,
+            task_type='GENERATE_PAGE_IMAGE',
+            status='PENDING'
         )
-        
-        # Generate image
-        page.status = 'GENERATING'
+        task.set_progress({
+            'total': 1,
+            'completed': 0,
+            'failed': 0
+        })
+        db.session.add(task)
         db.session.commit()
         
-        image = ai_service.generate_image(
-            prompt,
-            ref_image_path,
+        # Get app instance for background task
+        app = current_app._get_current_object()
+        
+        # Submit background task
+        task_manager.submit_task(
+            task.id,
+            generate_single_page_image_task,
+            project_id,
+            page_id,
+            ai_service,
+            file_service,
+            outline,
+            use_template,
             current_app.config['DEFAULT_ASPECT_RATIO'],
             current_app.config['DEFAULT_RESOLUTION'],
-            additional_ref_images=additional_ref_images if additional_ref_images else None
+            app,
+            project.extra_requirements
         )
         
-        if not image:
-            page.status = 'FAILED'
-            db.session.commit()
-            return error_response('AI_SERVICE_ERROR', 'Failed to generate image', 503)
-        
-        # Calculate next version number
-        existing_versions = PageImageVersion.query.filter_by(page_id=page_id).all()
-        next_version = len(existing_versions) + 1
-        
-        # Save image with version number
-        image_path = file_service.save_generated_image(
-            image, project_id, page_id, 
-            version_number=next_version
-        )
-        
-        # Mark all previous versions as not current
-        for version in existing_versions:
-            version.is_current = False
-        
-        # Create new version record
-        new_version = PageImageVersion(
-            page_id=page_id,
-            image_path=image_path,
-            version_number=next_version,
-            is_current=True
-        )
-        db.session.add(new_version)
-        
-        # Update page with current image path
-        page.generated_image_path = image_path
-        page.status = 'COMPLETED'
-        page.updated_at = datetime.utcnow()
-        
-        db.session.commit()
-        
-        return success_response(page.to_dict(include_versions=True))
+        # Return task_id immediately
+        return success_response({
+            'task_id': task.id,
+            'page_id': page_id,
+            'status': 'PENDING'
+        }, status_code=202)
     
     except Exception as e:
         db.session.rollback()

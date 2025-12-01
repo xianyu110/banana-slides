@@ -363,3 +363,150 @@ def generate_images_task(task_id: str, project_id: str, ai_service, file_service
                 task.completed_at = datetime.utcnow()
                 db.session.commit()
 
+
+def generate_single_page_image_task(task_id: str, project_id: str, page_id: str, 
+                                    ai_service, file_service, outline: List[Dict],
+                                    use_template: bool = True, aspect_ratio: str = "16:9",
+                                    resolution: str = "2K", app=None,
+                                    extra_requirements: str = None):
+    """
+    Background task for generating a single page image
+    
+    Note: app instance MUST be passed from the request context
+    """
+    if app is None:
+        raise ValueError("Flask app instance must be provided")
+    
+    with app.app_context():
+        try:
+            # Update task status to PROCESSING
+            task = Task.query.get(task_id)
+            if not task:
+                return
+            
+            task.status = 'PROCESSING'
+            db.session.commit()
+            
+            # Get page from database
+            page = Page.query.get(page_id)
+            if not page or page.project_id != project_id:
+                raise ValueError(f"Page {page_id} not found")
+            
+            # Update page status
+            page.status = 'GENERATING'
+            db.session.commit()
+            
+            # Get description content
+            desc_content = page.get_description_content()
+            if not desc_content:
+                raise ValueError("No description content for page")
+            
+            # 获取描述文本（可能是 text 字段或 text_content 数组）
+            desc_text = desc_content.get('text', '')
+            if not desc_text and desc_content.get('text_content'):
+                text_content = desc_content.get('text_content', [])
+                if isinstance(text_content, list):
+                    desc_text = '\n'.join(text_content)
+                else:
+                    desc_text = str(text_content)
+            
+            # 从描述文本中提取图片 URL
+            additional_ref_images = []
+            has_material_images = False
+            
+            if desc_text:
+                image_urls = ai_service.extract_image_urls_from_markdown(desc_text)
+                if image_urls:
+                    print(f"[INFO] Found {len(image_urls)} image(s) in page {page_id} description")
+                    additional_ref_images = image_urls
+                    has_material_images = True
+            
+            # Get template path if use_template
+            ref_image_path = None
+            if use_template:
+                ref_image_path = file_service.get_template_path(project_id)
+            
+            if not ref_image_path:
+                raise ValueError("No template image found for project")
+            
+            # Generate image prompt
+            page_data = page.get_outline_content() or {}
+            if page.part:
+                page_data['part'] = page.part
+            
+            prompt = ai_service.generate_image_prompt(
+                outline, page_data, desc_text, page.order_index + 1,
+                has_material_images=has_material_images,
+                extra_requirements=extra_requirements
+            )
+            
+            # Generate image
+            print(f"[INFO] 🎨 Generating image for page {page_id}...")
+            image = ai_service.generate_image(
+                prompt, ref_image_path, aspect_ratio, resolution,
+                additional_ref_images=additional_ref_images if additional_ref_images else None
+            )
+            
+            if not image:
+                raise ValueError("Failed to generate image")
+            
+            # Calculate next version number
+            from models import PageImageVersion
+            existing_versions = PageImageVersion.query.filter_by(page_id=page_id).all()
+            next_version = len(existing_versions) + 1
+            
+            # Save image with version number
+            image_path = file_service.save_generated_image(
+                image, project_id, page_id, 
+                version_number=next_version
+            )
+            
+            # Mark all previous versions as not current
+            for version in existing_versions:
+                version.is_current = False
+            
+            # Create new version record
+            new_version = PageImageVersion(
+                page_id=page_id,
+                image_path=image_path,
+                version_number=next_version,
+                is_current=True
+            )
+            db.session.add(new_version)
+            
+            # Update page with current image path
+            page.generated_image_path = image_path
+            page.status = 'COMPLETED'
+            page.updated_at = datetime.utcnow()
+            
+            # Mark task as completed
+            task.status = 'COMPLETED'
+            task.completed_at = datetime.utcnow()
+            task.set_progress({
+                "total": 1,
+                "completed": 1,
+                "failed": 0
+            })
+            db.session.commit()
+            
+            print(f"[INFO] ✅ Task {task_id} COMPLETED - Page {page_id} image generated")
+        
+        except Exception as e:
+            import traceback
+            error_detail = traceback.format_exc()
+            print(f"[ERROR] Task {task_id} FAILED: {error_detail}")
+            
+            # Mark task as failed
+            task = Task.query.get(task_id)
+            if task:
+                task.status = 'FAILED'
+                task.error_message = str(e)
+                task.completed_at = datetime.utcnow()
+                db.session.commit()
+            
+            # Update page status
+            page = Page.query.get(page_id)
+            if page:
+                page.status = 'FAILED'
+                db.session.commit()
+

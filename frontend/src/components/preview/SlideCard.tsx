@@ -11,6 +11,7 @@ interface SlideCardProps {
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  isGenerating?: boolean;
 }
 
 export const SlideCard: React.FC<SlideCardProps> = ({
@@ -20,11 +21,14 @@ export const SlideCard: React.FC<SlideCardProps> = ({
   onClick,
   onEdit,
   onDelete,
+  isGenerating = false,
 }) => {
   const { confirm, ConfirmDialog } = useConfirm();
   const imageUrl = page.generated_image_path
     ? getImageUrl(page.generated_image_path, page.updated_at)
     : '';
+  
+  const generating = isGenerating || page.status === 'GENERATING';
 
   return (
     <div
@@ -35,7 +39,7 @@ export const SlideCard: React.FC<SlideCardProps> = ({
     >
       {/* 缩略图 */}
       <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden mb-2">
-        {page.status === 'GENERATING' ? (
+        {generating ? (
           <Skeleton className="w-full h-full" />
         ) : page.generated_image_path ? (
           <>
