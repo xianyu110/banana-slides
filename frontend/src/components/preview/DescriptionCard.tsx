@@ -42,7 +42,7 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({
 
   return (
     <>
-      <Card className="p-0 overflow-hidden">
+      <Card className="p-0 overflow-hidden flex flex-col">
         {/* 标题栏 */}
         <div className="bg-banana-50 px-4 py-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
@@ -59,7 +59,7 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({
         </div>
 
         {/* 内容 */}
-        <div className="p-4">
+        <div className="p-4 flex-1">
           {text ? (
             <div className="text-sm text-gray-700 whitespace-pre-wrap">
               {text}
@@ -73,7 +73,7 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({
         </div>
 
         {/* 操作栏 */}
-        <div className="border-t border-gray-100 px-4 py-3 flex justify-end gap-2">
+        <div className="border-t border-gray-100 px-4 py-3 flex justify-end gap-2 mt-auto">
           <Button
             variant="ghost"
             size="sm"
