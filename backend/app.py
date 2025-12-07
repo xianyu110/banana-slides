@@ -29,6 +29,7 @@ from controllers.material_controller import material_bp, material_global_bp
 from controllers.reference_file_controller import reference_file_bp
 from controllers.proxy_controller import proxy_bp
 from controllers import project_bp, page_bp, template_bp, user_template_bp, export_bp, file_bp, settings_bp
+from controllers import system_templates_bp
 from controllers.i18n_controller import i18n_bp
 from controllers.auth_controller import auth_bp
 from controllers.oauth_controller import oauth_bp
@@ -157,6 +158,7 @@ def create_app():
     app.register_blueprint(page_bp)
     app.register_blueprint(template_bp)
     app.register_blueprint(user_template_bp)
+    app.register_blueprint(system_templates_bp)  # 系统模板API
     app.register_blueprint(export_bp)
     app.register_blueprint(file_bp)
     app.register_blueprint(material_bp)

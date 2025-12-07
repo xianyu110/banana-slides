@@ -10,3 +10,4 @@ reportlab>=4.1.0
 werkzeug>=3.0.1
 markitdown[all]
 requests>=2.31.0
+flask-babel>=4.0.0
