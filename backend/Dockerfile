@@ -4,6 +4,11 @@ FROM python:3.10-slim-bookworm
 # 设置工作目录
 WORKDIR /app
 
+# 设置环境变量以避免 OpenBLAS 多线程问题
+ENV OPENBLAS_NUM_THREADS=1
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+
 # 安装 uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 RUN chmod +x /usr/local/bin/uv
