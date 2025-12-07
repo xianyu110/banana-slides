@@ -6,7 +6,7 @@ import { OutlineEditor } from './pages/OutlineEditor';
 import { DetailEditor } from './pages/DetailEditor';
 import { SlidePreview } from './pages/SlidePreview';
 import { useProjectStore } from './store/useProjectStore';
-import { Loading, useToast, GithubLink } from './components/shared';
+import { Loading, useToast } from './components/shared';
 
 function App() {
   const { currentProject, syncProject, error, setError } = useProjectStore();
@@ -39,7 +39,6 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastContainer />
-      <GithubLink />
     </BrowserRouter>
   );
 }
