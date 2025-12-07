@@ -1,0 +1,71 @@
+{
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "upload": "Upload",
+    "download": "Download",
+    "copy": "Copy",
+    "generate": "Generate",
+    "regenerate": "Regenerate",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "retry": "Retry",
+    "close": "Close",
+    "apply": "Apply",
+    "reset": "Reset",
+    "search": "Search",
+    "clear": "Clear",
+    "select": "Select"
+  },
+  "loading": {
+    "loading": "Loading...",
+    "generating": "Generating...",
+    "saving": "Saving...",
+    "processing": "Processing...",
+    "uploading": "Uploading...",
+    "downloading": "Downloading..."
+  },
+  "status": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "completed": "Completed",
+    "pending": "Pending",
+    "failed": "Failed",
+    "draft": "Draft",
+    "published": "Published"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "projects": "Projects",
+    "settings": "Settings",
+    "help": "Help",
+    "about": "About"
+  },
+  "form": {
+    "required": "This field is required",
+    "invalid_email": "Please enter a valid email address",
+    "password_too_short": "Password must be at least 8 characters",
+    "passwords_not_match": "Passwords do not match",
+    "file_too_large": "File is too large",
+    "invalid_file_type": "Unsupported file type"
+  },
+  "time": {
+    "just_now": "Just now",
+    "minutes_ago": "{{count}} minutes ago",
+    "hours_ago": "{{count}} hours ago",
+    "days_ago": "{{count}} days ago",
+    "weeks_ago": "{{count}} weeks ago",
+    "months_ago": "{{count}} months ago",
+    "years_ago": "{{count}} years ago"
+  }
+}

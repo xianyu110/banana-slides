@@ -210,6 +210,31 @@
     "download_ready": "导出完成，点击下载",
     "download_button": "下载文件"
   },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出登录",
+    "email": "邮箱",
+    "password": "密码",
+    "username": "用户名",
+    "email_placeholder": "请输入邮箱地址",
+    "password_placeholder": "请输入密码",
+    "username_placeholder": "请输入用户名",
+    "login_subtitle": "登录后可保存您的历史记录",
+    "register_subtitle": "创建账号以保存您的PPT历史",
+    "continue_with_google": "使用 Google 登录",
+    "continue_with_github": "使用 GitHub 登录",
+    "or_continue_with_email": "或使用邮箱登录",
+    "no_account": "还没有账号？",
+    "already_have_account": "已有账号？",
+    "login_success": "登录成功！",
+    "register_success": "注册成功！",
+    "logout_success": "已退出登录",
+    "login_error": "登录失败，请检查邮箱和密码",
+    "register_error": "注册失败，请重试",
+    "oauth_error": "第三方登录失败，请重试",
+    "optional_login_hint": "登录是可选的，未登录也可以正常使用所有功能。登录后可保存您的历史记录。"
+  },
   "errors": {
     "network_error": "网络连接错误，请检查您的网络设置",
     "server_error": "服务器错误，请稍后重试",
@@ -221,6 +246,7 @@
     "generation_error": "AI生成失败，请重试",
     "quota_exceeded": "已达到使用限额",
     "maintenance": "系统维护中，请稍后访问",
-    "unknown_error": "未知错误，请联系支持"
+    "unknown_error": "未知错误，请联系支持",
+    "invalid_file_type": "不支持的文件类型"
   }
 }

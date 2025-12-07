@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb, Settings } from 'lucide-react';
+import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb, Settings, LogIn, LogOut, UserCircle } from 'lucide-react';
 import { Button, Textarea, Card, useToast, MaterialGeneratorModal, APISettingsModal, ReferenceFileCard, ReferenceFileSelector } from '@/components/shared';
 import { OnboardingGuide } from '@/components/shared/OnboardingGuide';
 import { TemplateSelector, getTemplateFile } from '@/components/shared/TemplateSelector';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { listUserTemplates, type UserTemplate, uploadReferenceFile, type ReferenceFile, associateFileToProject } from '@/api/endpoints';
 import { useProjectStore } from '@/store/useProjectStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import { logout as logoutApi } from '@/api/auth';
 
 type CreationType = 'idea' | 'outline' | 'description';
 
@@ -16,6 +19,7 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { initializeProject, isGlobalLoading } = useProjectStore();
   const { show, ToastContainer } = useToast();
+  const { isAuthenticated, user, logout: logoutStore, getAccessToken } = useAuthStore();
   
   const [activeTab, setActiveTab] = useState<CreationType>('idea');
   const [content, setContent] = useState('');
@@ -231,6 +235,23 @@ export const Home: React.FC = () => {
     }
   };
 
+  // 处理退出登录
+  const handleLogout = async () => {
+    try {
+      const accessToken = getAccessToken();
+      if (accessToken) {
+        await logoutApi(accessToken);
+      }
+      logoutStore();
+      show({ message: t('auth.logout_success'), type: 'success' });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // 即使 API 调用失败也要清除本地状态
+      logoutStore();
+      show({ message: t('auth.logout_success'), type: 'success' });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!content.trim()) {
       show({ message: t('errors.validation_error'), type: 'error' });
@@ -302,16 +323,16 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50/30 to-pink-50/50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50/30 to-pink-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden transition-colors duration-300">
       {/* 背景装饰元素 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-banana-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-yellow-400/5 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-banana-500/10 dark:bg-banana-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-400/10 dark:bg-orange-400/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-yellow-400/5 dark:bg-yellow-400/3 rounded-full blur-3xl"></div>
       </div>
 
       {/* 导航栏 */}
-      <nav className="relative h-14 md:h-16 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100/50">
+      <nav className="relative h-14 md:h-16 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm border-b border-gray-100/50 dark:border-gray-700/50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-3 md:px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img
@@ -319,7 +340,7 @@ export const Home: React.FC = () => {
               alt="MaynorAI Banana Pro Slides Logo"
               className="w-8 h-8 md:w-12 md:h-12 rounded-lg object-cover object-center"
             />
-            <span className="text-lg md:text-xl font-bold text-gray-900">
+            <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">
               MaynorAI
             </span>
           </div>
@@ -343,6 +364,7 @@ export const Home: React.FC = () => {
               <span className="sm:hidden">{t('common.navigation.projects')}</span>
             </Button>
             <LanguageSwitcher variant="toggle" className="hidden sm:flex" />
+            <ThemeToggle variant="toggle" className="hidden sm:flex" />
             <Button
               variant="ghost"
               size="sm"
@@ -355,12 +377,52 @@ export const Home: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="hover:bg-banana-50/50"
+              className="hover:bg-banana-50/50 dark:hover:bg-gray-800"
               onClick={() => setIsOnboardingOpen(true)}
             >
               <span className="hidden md:inline">{t('common.navigation.help')}</span>
               <span className="md:hidden">帮助</span>
             </Button>
+
+            {/* 登录/用户菜单 */}
+            {isAuthenticated && user ? (
+              <div className="relative group">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<UserCircle size={18} />}
+                  className="hover:bg-banana-50/50 dark:hover:bg-gray-800"
+                >
+                  <span className="hidden md:inline max-w-24 truncate">{user.username}</span>
+                </Button>
+                {/* 下拉菜单 */}
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="p-2">
+                    <div className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                      <p className="font-medium truncate">{user.username}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                    >
+                      <LogOut size={16} />
+                      <span>{t('auth.logout')}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<LogIn size={16} className="md:w-[18px] md:h-[18px]" />}
+                onClick={() => navigate('/auth')}
+                className="hover:bg-banana-50/50 dark:hover:bg-gray-800"
+              >
+                <span className="hidden md:inline">{t('auth.login')}</span>
+              </Button>
+            )}
           </div>
         </div>
       </nav>
@@ -369,9 +431,9 @@ export const Home: React.FC = () => {
       <main className="relative max-w-5xl mx-auto px-3 md:px-4 py-8 md:py-12">
         {/* Hero 标题区 */}
         <div className="text-center mb-10 md:mb-16 space-y-4 md:space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-banana-200/50 shadow-sm mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full border border-banana-200/50 dark:border-banana-400/30 shadow-sm mb-4">
             <span className="text-2xl animate-pulse"><Sparkles size={20} color="orange" /></span>
-            <span className="text-sm font-medium text-gray-700">基于 nano banana pro🍌 的原生 AI PPT 生成器</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">基于 nano banana pro🍌 的原生 AI PPT 生成器</span>
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight">
@@ -383,10 +445,10 @@ export const Home: React.FC = () => {
             </span>
           </h1>
           
-          <p className="text-lg md:text-2xl text-gray-600 max-w-3xl mx-auto font-light">
+          <p className="text-lg md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto font-light">
             <span className="font-medium">Vibe your PPT  like vibing code</span>
             <br className="hidden md:block" />
-            <span className="text-base md:text-lg text-gray-500 mt-2 block">
+            <span className="text-base md:text-lg text-gray-500 dark:text-gray-400 mt-2 block">
               降低 PPT 制作门槛，让每个人都能快速创作出美观专业的演示文稿
             </span>
           </p>
@@ -401,7 +463,7 @@ export const Home: React.FC = () => {
             ].map((feature, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/70 backdrop-blur-sm rounded-full text-xs md:text-sm text-gray-700 border border-gray-200/50 shadow-sm hover:shadow-md transition-all hover:scale-105 cursor-default"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-full text-xs md:text-sm text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-600/50 shadow-sm hover:shadow-md transition-all hover:scale-105 cursor-default"
               >
                 {feature.icon}
                 {feature.label}
@@ -411,7 +473,7 @@ export const Home: React.FC = () => {
         </div>
 
         {/* 创建卡片 */}
-        <Card className="p-4 md:p-10 bg-white/90 backdrop-blur-xl shadow-2xl border-0 hover:shadow-3xl transition-all duration-300">
+        <Card className="p-4 md:p-10 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-2xl border-0 hover:shadow-3xl transition-all duration-300">
           {/* 选项卡 */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6 md:mb-8">
             {(Object.keys(tabConfig) as CreationType[]).map((type) => {
@@ -423,7 +485,7 @@ export const Home: React.FC = () => {
                   className={`flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-6 py-2.5 md:py-3 rounded-lg font-medium transition-all text-sm md:text-base touch-manipulation ${
                     activeTab === type
                       ? 'bg-gradient-to-r from-banana-500 to-banana-600 text-black shadow-yellow'
-                      : 'bg-white border border-gray-200 text-gray-700 hover:bg-banana-50 active:bg-banana-100'
+                      : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-banana-50 dark:hover:bg-gray-600 active:bg-banana-100'
                   }`}
                 >
                   <span className="scale-90 md:scale-100">{config.icon}</span>
@@ -436,8 +498,8 @@ export const Home: React.FC = () => {
           {/* 描述 */}
           <div className="relative">
             <p className="text-sm md:text-base mb-4 md:mb-6 leading-relaxed">
-              <span className="inline-flex items-center gap-2 text-gray-600">
-                <Lightbulb size={16} className="text-banana-600 flex-shrink-0" />
+              <span className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                <Lightbulb size={16} className="text-banana-600 dark:text-banana-400 flex-shrink-0" />
                 <span className="font-semibold">
                   {tabConfig[activeTab].description}
                 </span>
@@ -461,7 +523,7 @@ export const Home: React.FC = () => {
             <button
               type="button"
               onClick={handlePaperclipClick}
-              className="absolute left-2 md:left-3 bottom-2 md:bottom-3 z-10 p-1.5 md:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors active:scale-95 touch-manipulation"
+              className="absolute left-2 md:left-3 bottom-2 md:bottom-3 z-10 p-1.5 md:p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors active:scale-95 touch-manipulation"
               title="选择参考文件"
             >
               <Paperclip size={18} className="md:w-5 md:h-5" />
@@ -513,11 +575,11 @@ export const Home: React.FC = () => {
           )}
 
           {/* 模板选择 */}
-          <div className="mb-6 md:mb-8 pt-4 border-t border-gray-100">
+          <div className="mb-6 md:mb-8 pt-4 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-2 mb-3 md:mb-4">
               <div className="flex items-center gap-2">
-                <Palette size={18} className="text-orange-600 flex-shrink-0" />
-                <h3 className="text-base md:text-lg font-semibold text-gray-900">
+                <Palette size={18} className="text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-100">
                   选择风格模板
                 </h3>
               </div>

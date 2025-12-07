@@ -1,0 +1,71 @@
+{
+  "buttons": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "upload": "上传",
+    "download": "下载",
+    "copy": "复制",
+    "generate": "生成",
+    "regenerate": "重新生成",
+    "continue": "继续",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "finish": "完成",
+    "retry": "重试",
+    "close": "关闭",
+    "apply": "应用",
+    "reset": "重置",
+    "search": "搜索",
+    "clear": "清空",
+    "select": "选择"
+  },
+  "loading": {
+    "loading": "加载中...",
+    "generating": "生成中...",
+    "saving": "保存中...",
+    "processing": "处理中...",
+    "uploading": "上传中...",
+    "downloading": "下载中..."
+  },
+  "status": {
+    "success": "操作成功",
+    "error": "操作失败",
+    "warning": "警告",
+    "info": "提示",
+    "completed": "已完成",
+    "pending": "待处理",
+    "failed": "失败",
+    "draft": "草稿",
+    "published": "已发布"
+  },
+  "navigation": {
+    "home": "首页",
+    "dashboard": "控制台",
+    "projects": "项目",
+    "settings": "设置",
+    "help": "帮助",
+    "about": "关于"
+  },
+  "form": {
+    "required": "此字段为必填项",
+    "invalid_email": "请输入有效的邮箱地址",
+    "password_too_short": "密码至少需要8个字符",
+    "passwords_not_match": "两次输入的密码不一致",
+    "file_too_large": "文件过大",
+    "invalid_file_type": "不支持的文件类型"
+  },
+  "time": {
+    "just_now": "刚刚",
+    "minutes_ago": "{{count}} 分钟前",
+    "hours_ago": "{{count}} 小时前",
+    "days_ago": "{{count}} 天前",
+    "weeks_ago": "{{count}} 周前",
+    "months_ago": "{{count}} 月前",
+    "years_ago": "{{count}} 年前"
+  }
+}

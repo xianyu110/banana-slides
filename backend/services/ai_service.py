@@ -207,20 +207,21 @@ class AIService:
             logger.error(f"Failed to download image from {url}: {str(e)}")
             return None
     
-    def generate_outline(self, idea_prompt: str, reference_files_content: Optional[List[Dict[str, str]]] = None) -> List[Dict]:
+    def generate_outline(self, idea_prompt: str, reference_files_content: Optional[List[Dict[str, str]]] = None, language: str = 'zh') -> List[Dict]:
         """
         Generate PPT outline from idea prompt
         Based on demo.py gen_outline()
-        
+
         Args:
             idea_prompt: User's idea/request
             reference_files_content: Optional list of reference file contents
-            
+            language: Language for generated content ('zh' or 'en')
+
         Returns:
             List of outline items (may contain parts with pages or direct pages)
         """
-        outline_prompt = get_outline_generation_prompt(idea_prompt, reference_files_content)
-        
+        outline_prompt = get_outline_generation_prompt(idea_prompt, reference_files_content, language)
+
         response = self.client.models.generate_content(
             model=self.text_model,
             contents=outline_prompt,
@@ -228,7 +229,7 @@ class AIService:
                 thinking_config=types.ThinkingConfig(thinking_budget=1000),
             ),
         )
-        
+
         outline_text = response.text.strip().strip("```json").strip("```").strip()
         outline = json.loads(outline_text)
         return outline

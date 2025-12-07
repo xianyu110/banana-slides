@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Trash2 } from 'lucide-react';
+import { Home, Trash2, LogIn, Info } from 'lucide-react';
 import { Button, Loading, Card, useToast, useConfirm } from '@/components/shared';
 import { ProjectCard } from '@/components/history/ProjectCard';
 import { useProjectStore } from '@/store/useProjectStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import * as api from '@/api/endpoints';
 import { normalizeProject } from '@/utils';
 import { getProjectTitle, getProjectRoute } from '@/utils/projectUtils';
@@ -12,6 +13,7 @@ import type { Project } from '@/types';
 export const History: React.FC = () => {
   const navigate = useNavigate();
   const { syncProject, setCurrentProject } = useProjectStore();
+  const { isAuthenticated } = useAuthStore();
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -252,15 +254,15 @@ export const History: React.FC = () => {
   }, [handleSaveEdit, handleCancelEdit]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-banana-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-banana-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
       {/* 导航栏 */}
-      <nav className="h-14 md:h-16 bg-white shadow-sm border-b border-gray-100">
+      <nav className="h-14 md:h-16 bg-white dark:bg-gray-900 shadow-sm border-b border-gray-100 dark:border-gray-700 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-3 md:px-4 h-full flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-banana-500 to-banana-600 rounded-lg flex items-center justify-center text-xl md:text-2xl">
               🍌
             </div>
-            <span className="text-lg md:text-xl font-bold text-gray-900">MaynorAI</span>
+            <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">MaynorAI</span>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
             <Button
@@ -281,8 +283,8 @@ export const History: React.FC = () => {
       <main className="max-w-6xl mx-auto px-3 md:px-4 py-6 md:py-8">
         <div className="mb-6 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">历史项目</h1>
-            <p className="text-sm md:text-base text-gray-600">查看和管理你的所有项目</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1 md:mb-2">历史项目</h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">查看和管理你的所有项目</p>
           </div>
           {projects.length > 0 && selectedProjects.size > 0 && (
             <div className="flex items-center gap-3">
@@ -310,6 +312,30 @@ export const History: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* 未登录提示 */}
+        {!isAuthenticated && (
+          <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+            <Info size={20} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-blue-800 dark:text-blue-300 mb-2">
+                💡 <strong>提示：</strong>您当前未登录，项目历史记录将仅保存在本地浏览器中。
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-400 mb-3">
+                登录后，您的项目历史将保存到云端，可在任何设备访问。
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<LogIn size={16} />}
+                onClick={() => navigate('/auth')}
+                className="bg-blue-600 hover:bg-blue-700 text-white border-0"
+              >
+                立即登录
+              </Button>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">

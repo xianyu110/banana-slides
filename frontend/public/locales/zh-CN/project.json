@@ -1,0 +1,66 @@
+{
+  "creation": {
+    "title": "创建新项目",
+    "subtitle": "选择一种方式来创建您的演示文稿",
+    "idea_tab": "一句话生成",
+    "outline_tab": "大纲生成",
+    "description_tab": "详细描述",
+    "idea_placeholder": "例如：创建一个关于人工智能发展历史的PPT",
+    "idea_help": "AI将根据您的想法自动生成完整的大纲和内容",
+    "outline_placeholder": "请输入您的大纲内容，支持标题和要点格式",
+    "outline_help": "AI将解析您的大纲并创建对应的幻灯片",
+    "description_placeholder": "请详细描述您想要的PPT内容，包括每页的具体信息",
+    "description_help": "AI将根据您的详细描述直接生成幻灯片内容",
+    "template_label": "模板图片（可选）",
+    "template_help": "上传参考图片以统一设计风格",
+    "create_button": "创建项目",
+    "upload_template": "上传模板"
+  },
+  "dashboard": {
+    "title": "我的项目",
+    "subtitle": "管理和创建您的演示文稿",
+    "new_project": "新建项目",
+    "search_placeholder": "搜索项目...",
+    "filter_all": "全部",
+    "filter_draft": "草稿",
+    "filter_completed": "已完成",
+    "sort_by": "排序方式",
+    "sort_by_date": "按创建时间",
+    "sort_by_name": "按名称",
+    "sort_by_modified": "按修改时间",
+    "empty_state": {
+      "title": "还没有项目",
+      "subtitle": "创建您的第一个AI生成的演示文稿",
+      "create_button": "立即创建"
+    }
+  },
+  "editor": {
+    "outline_section": "大纲",
+    "content_section": "内容",
+    "preview_section": "预览",
+    "generate_outline": "生成大纲",
+    "generate_descriptions": "生成描述",
+    "generate_images": "生成图片",
+    "add_page": "添加页面",
+    "delete_page": "删除页面",
+    "page_title": "页面标题",
+    "page_content": "页面内容",
+    "edit_page": "编辑页面",
+    "save_changes": "保存更改",
+    "discard_changes": "放弃更改",
+    "reorder_pages": "重新排序",
+    "export_options": "导出选项",
+    "settings": "项目设置"
+  },
+  "generation": {
+    "generating_outline": "正在生成大纲...",
+    "generating_descriptions": "正在生成页面描述...",
+    "generating_images": "正在生成图片...",
+    "progress": "进度：{{current}}/{{total}}",
+    "completed": "生成完成！",
+    "failed": "生成失败，请重试",
+    "edit_prompt": "编辑提示：调整图片的某个部分",
+    "regenerate_page": "重新生成此页",
+    "use_template": "使用模板风格"
+  }
+}

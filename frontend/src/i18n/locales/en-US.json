@@ -210,6 +210,31 @@
     "download_ready": "Export complete, click to download",
     "download_button": "Download File"
   },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "logout": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "email_placeholder": "Enter your email",
+    "password_placeholder": "Enter your password",
+    "username_placeholder": "Enter your username",
+    "login_subtitle": "Sign in to save your history",
+    "register_subtitle": "Create an account to save your PPT history",
+    "continue_with_google": "Continue with Google",
+    "continue_with_github": "Continue with GitHub",
+    "or_continue_with_email": "Or continue with email",
+    "no_account": "Don't have an account?",
+    "already_have_account": "Already have an account?",
+    "login_success": "Successfully signed in!",
+    "register_success": "Successfully registered!",
+    "logout_success": "Successfully signed out",
+    "login_error": "Login failed, please check your email and password",
+    "register_error": "Registration failed, please try again",
+    "oauth_error": "OAuth login failed, please try again",
+    "optional_login_hint": "Login is optional. You can use all features without signing in. Sign in to save your history."
+  },
   "errors": {
     "network_error": "Network connection error, please check your network settings",
     "server_error": "Server error, please try again later",
@@ -221,6 +246,7 @@
     "generation_error": "AI generation failed, please try again",
     "quota_exceeded": "Usage quota exceeded",
     "maintenance": "System under maintenance, please visit later",
-    "unknown_error": "Unknown error, please contact support"
+    "unknown_error": "Unknown error, please contact support",
+    "invalid_file_type": "Unsupported file type"
   }
 }

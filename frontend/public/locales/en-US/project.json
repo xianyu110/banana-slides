@@ -1,0 +1,66 @@
+{
+  "creation": {
+    "title": "Create New Project",
+    "subtitle": "Choose a method to create your presentation",
+    "idea_tab": "Idea Generation",
+    "outline_tab": "Outline Generation",
+    "description_tab": "Detailed Description",
+    "idea_placeholder": "e.g., Create a presentation about the history of artificial intelligence",
+    "idea_help": "AI will automatically generate a complete outline and content based on your idea",
+    "outline_placeholder": "Enter your outline content, supporting title and bullet point format",
+    "outline_help": "AI will parse your outline and create corresponding slides",
+    "description_placeholder": "Describe in detail the PPT content you want, including specific information for each page",
+    "description_help": "AI will directly generate slide content based on your detailed description",
+    "template_label": "Template Image (Optional)",
+    "template_help": "Upload a reference image to unify the design style",
+    "create_button": "Create Project",
+    "upload_template": "Upload Template"
+  },
+  "dashboard": {
+    "title": "My Projects",
+    "subtitle": "Manage and create your presentations",
+    "new_project": "New Project",
+    "search_placeholder": "Search projects...",
+    "filter_all": "All",
+    "filter_draft": "Draft",
+    "filter_completed": "Completed",
+    "sort_by": "Sort by",
+    "sort_by_date": "Create Date",
+    "sort_by_name": "Name",
+    "sort_by_modified": "Modified Date",
+    "empty_state": {
+      "title": "No projects yet",
+      "subtitle": "Create your first AI-generated presentation",
+      "create_button": "Create Now"
+    }
+  },
+  "editor": {
+    "outline_section": "Outline",
+    "content_section": "Content",
+    "preview_section": "Preview",
+    "generate_outline": "Generate Outline",
+    "generate_descriptions": "Generate Descriptions",
+    "generate_images": "Generate Images",
+    "add_page": "Add Page",
+    "delete_page": "Delete Page",
+    "page_title": "Page Title",
+    "page_content": "Page Content",
+    "edit_page": "Edit Page",
+    "save_changes": "Save Changes",
+    "discard_changes": "Discard Changes",
+    "reorder_pages": "Reorder Pages",
+    "export_options": "Export Options",
+    "settings": "Project Settings"
+  },
+  "generation": {
+    "generating_outline": "Generating outline...",
+    "generating_descriptions": "Generating page descriptions...",
+    "generating_images": "Generating images...",
+    "progress": "Progress: {{current}}/{{total}}",
+    "completed": "Generation completed!",
+    "failed": "Generation failed, please try again",
+    "edit_prompt": "Edit Prompt: Adjust a specific part of the image",
+    "regenerate_page": "Regenerate this page",
+    "use_template": "Use template style"
+  }
+}

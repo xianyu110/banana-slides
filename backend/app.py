@@ -12,8 +12,9 @@ import sqlite3
 # Load environment variables BEFORE importing anything else
 load_dotenv()
 
-from flask import Flask
+from flask import Flask, request
 from flask_cors import CORS
+from flask_babel import Babel
 from models import db
 from config import Config
 from default_config import (
@@ -28,6 +29,9 @@ from controllers.material_controller import material_bp, material_global_bp
 from controllers.reference_file_controller import reference_file_bp
 from controllers.proxy_controller import proxy_bp
 from controllers import project_bp, page_bp, template_bp, user_template_bp, export_bp, file_bp, settings_bp
+from controllers.i18n_controller import i18n_bp
+from controllers.auth_controller import auth_bp
+from controllers.oauth_controller import oauth_bp
 
 
 # Enable SQLite WAL mode for all connections
@@ -118,11 +122,37 @@ def create_app():
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('werkzeug').setLevel(logging.INFO)  # Flask开发服务器日志保持INFO
 
+    # Babel configuration
+    app.config['LANGUAGES'] = ['zh', 'en']
+    app.config['BABEL_DEFAULT_LOCALE'] = 'zh'
+    app.config['BABEL_DEFAULT_TIMEZONE'] = 'UTC'
+
+    def get_locale():
+        # 1. 从请求头获取语言偏好
+        lang = request.accept_languages.best_match(app.config['LANGUAGES'])
+
+        # 2. 从URL参数获取语言
+        if 'lang' in request.args:
+            lang = request.args['lang']
+
+        # 3. 从Cookie获取语言
+        if 'language' in request.cookies:
+            lang = request.cookies['language']
+
+        # 4. 从请求头的Accept-Language获取
+        if not lang:
+            lang = request.accept_languages.best_match(app.config['LANGUAGES']) or app.config['BABEL_DEFAULT_LOCALE']
+
+        return lang
+
     # Initialize extensions
     db.init_app(app)
     CORS(app, origins=cors_origins)
+    babel = Babel(app, locale_selector=get_locale)
     
     # Register blueprints
+    app.register_blueprint(auth_bp)  # 认证相关API
+    app.register_blueprint(oauth_bp) # OAuth相关API
     app.register_blueprint(project_bp)
     app.register_blueprint(page_bp)
     app.register_blueprint(template_bp)
@@ -134,6 +164,7 @@ def create_app():
     app.register_blueprint(reference_file_bp, url_prefix='/api/reference-files')
     app.register_blueprint(settings_bp)
     app.register_blueprint(proxy_bp)
+    app.register_blueprint(i18n_bp)
     
     with app.app_context():
         db.create_all()

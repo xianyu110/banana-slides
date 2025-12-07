@@ -85,8 +85,9 @@
 | 🧭 规划中 | 优化前端加载速度 |
 | 🧭 规划中 | 在线播放功能 |
 | 🧭 规划中 | 简单的动画和页面切换效果 |
-| 🧭 规划中 | 多语种支持 |
-| 🧭 规划中 | 用户系统 |
+| ✅ 已完成 | 多语种支持 |
+| ✅ 已完成 | 暗黑/明亮模式切换 |
+| 🔄 进行中 | 用户系统 |
 
 
 ## 🎯 功能介绍
@@ -101,6 +102,8 @@
 - 🧙‍♀️ **AI 辅助编排**：由 LLM 生成结构清晰的大纲和逐页内容描述
 - 🖼️ **高质量页面生成**：基于 nano banana pro🍌 生成高清、风格统一的页面设计
 - 🗣️ **自然语言修改**：支持对单页、单页局部（已支持）或整套（未来支持）PPT 进行「口头」式自然语言修改与重生成
+- 🌍 **多语种支持**：支持中英文界面切换，AI 生成内容语言自适应
+- 🌓 **暗黑/明亮模式**：支持亮色/暗色主题切换，自动跟随系统设置
 - 📊 **一键导出**：自动组合为 PPTX / PDF，16:9 比例，开箱即用
 
 ### 1. 多种创建方式
@@ -128,6 +131,19 @@
 - **PPTX 导出**：标准 PowerPoint 格式
 - **PDF 导出**：适合快速分享和展示
 - 默认 16:9 比例，保证在主流显示设备上的观感
+
+### 6. 多语种支持 🌍
+
+- **界面语言切换**：支持中英文界面实时切换，无需刷新页面
+- **智能语言检测**：自动根据用户浏览器语言偏好设置初始语言
+- **AI 内容语言控制**：根据用户界面语言自动生成对应语言的 PPT 内容
+
+### 7. 暗黑/明亮模式 🌓
+
+- **主题切换**：支持明亮模式、暗黑模式和跟随系统三种主题设置
+- **智能适配**：暗色模式下所有 UI 元素自动适配，提供舒适的视觉体验
+- **持久化存储**：主题偏好自动保存到本地，下次访问时自动应用
+- **平滑过渡**：主题切换时采用流畅的过渡动画，提升用户体验
 
 
 ## 🌐 API配置说明
@@ -356,6 +372,7 @@ npm run dev
 - **状态管理**：Zustand
 - **路由**：React Router v6
 - **UI组件**：Tailwind CSS
+- **国际化**：react-i18next (支持多语种)
 - **拖拽功能**：@dnd-kit
 - **图标**：Lucide React
 - **HTTP客户端**：Axios
@@ -365,6 +382,7 @@ npm run dev
 - **框架**：Flask 3.0
 - **包管理**：uv
 - **数据库**：SQLite + Flask-SQLAlchemy
+- **国际化**：Flask-Babel (支持多语种)
 - **AI能力**：Google Gemini API
 - **PPT处理**：python-pptx
 - **图片处理**：Pillow
@@ -402,19 +420,25 @@ banana-slides/
 │   │   │   │   ├── MaterialGeneratorModal.tsx
 │   │   │   │   ├── TemplateSelector.tsx
 │   │   │   │   ├── ReferenceFileSelector.tsx
-│   │   │   │   └── ...
-│   │   │   ├── layout/         # 布局组件
-│   │   │   └── history/        # 历史版本组件
+│   │   │   │   └── LanguageSwitcher.tsx    # 语言切换组件
+│   │   │   └── ...
+│   │   ├── layout/         # 布局组件
+│   │   └── history/        # 历史版本组件
 │   │   ├── store/              # Zustand状态管理
 │   │   │   └── useProjectStore.ts
+│   │   ├── i18n/               # 国际化配置
+│   │   │   ├── config.ts       # i18n 配置
+│   │   │   └── locales/        # 语言包文件
 │   │   ├── api/                # API接口
 │   │   │   ├── client.ts       # Axios客户端配置
-│   │   │   └── endpoints.ts    # API端点定义
+│   │   │   ├── endpoints.ts    # API端点定义
+│   │   │   └── i18n.ts         # 语言API客户端
 │   │   ├── types/              # TypeScript类型定义
 │   │   ├── utils/              # 工具函数
 │   │   ├── constants/          # 常量定义
 │   │   └── styles/             # 样式文件
 │   ├── public/                 # 静态资源
+│   │   └── locales/            # HTTP 加载的语言包
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── tailwind.config.js      # Tailwind CSS配置
@@ -446,12 +470,17 @@ banana-slides/
 │   │   ├── template_controller.py     # 模板管理
 │   │   ├── reference_file_controller.py # 参考文件管理
 │   │   ├── export_controller.py       # 导出功能
+│   │   ├── i18n_controller.py         # 国际化语言管理
 │   │   └── file_controller.py         # 文件上传
 │   ├── utils/                  # 工具函数
-│   │   ├── response.py         # 统一响应格式
+│   │   ├── response.py         # 统一响应格式（支持国际化）
+│   │   ├── i18n.py             # 国际化工具函数
 │   │   ├── validators.py       # 数据验证
 │   │   └── path_utils.py       # 路径处理
-│   ├── instance/               # SQLite数据库（自动生成）
+│   ├── translations/           # 翻译文件（Flask-Babel）
+│   │   ├── zh/LC_MESSAGES/     # 中文翻译
+│   │   └── en/LC_MESSAGES/     # 英文翻译
+│   ├── instance/               # SQLite数据库（自动生��）
 │   ├── exports/                # 导出文件目录
 │   ├── Dockerfile
 │   └── README.md
@@ -460,6 +489,7 @@ banana-slides/
 ├── v0_demo/                    # 早期演示版本
 ├── output/                     # 输出文件目录
 │
+├── I18N_TEST_SUMMARY.md        # 多语种功能实现总结
 ├── pyproject.toml              # Python项目配置（uv管理）
 ├── uv.lock                     # uv依赖锁定文件
 ├── docker-compose.yml          # Docker Compose配置
@@ -476,6 +506,34 @@ banana-slides/
 和
 [Pull Request](https://github.com/Anionex/banana-slides/pulls)
 为本项目贡献力量！
+
+### 多语种贡献 🌍
+
+如果您想为项目贡献新的语言支持：
+
+1. **前端语言包**：
+   - 复制 `frontend/src/i18n/locales/zh-CN.json` 为新语言文件
+   - 翻译所有文本内容
+   - 在 `frontend/src/i18n/config.ts` 中添加新语言支持
+
+2. **后端翻译**：
+   ```bash
+   cd backend
+   # 提取新的翻译字符串
+   python extract_messages.py
+
+   # 初始化新语言（例如日语）
+   pybabel init -i messages.pot -d translations -l ja
+
+   # 编辑翻译文件后编译
+   pybabel compile -d translations
+   ```
+
+3. **更新语言切换组件**：
+   - 在 `frontend/src/components/LanguageSwitcher.tsx` 中添加新语言选项
+   - 在后端 `controllers/i18n_controller.py` 中添加语言支持
+
+详细的多语种开发指南请参考 `I18N_TEST_SUMMARY.md`。
 
 ## 📄 许可证
 

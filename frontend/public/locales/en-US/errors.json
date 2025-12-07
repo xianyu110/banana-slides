@@ -1,0 +1,13 @@
+{
+  "network_error": "Network connection error, please check your network settings",
+  "server_error": "Server error, please try again later",
+  "not_found": "Page not found",
+  "unauthorized": "Unauthorized access, please sign in first",
+  "forbidden": "Insufficient permissions",
+  "validation_error": "Input validation failed",
+  "file_upload_error": "File upload failed",
+  "generation_error": "AI generation failed, please try again",
+  "quota_exceeded": "Usage quota exceeded",
+  "maintenance": "System under maintenance, please visit later",
+  "unknown_error": "Unknown error, please contact support"
+}

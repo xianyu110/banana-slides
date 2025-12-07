@@ -1,0 +1,13 @@
+{
+  "network_error": "网络连接错误，请检查您的网络设置",
+  "server_error": "服务器错误，请稍后重试",
+  "not_found": "页面不存在",
+  "unauthorized": "未授权访问，请先登录",
+  "forbidden": "权限不足",
+  "validation_error": "输入验证失败",
+  "file_upload_error": "文件上传失败",
+  "generation_error": "AI生成失败，请重试",
+  "quota_exceeded": "已达到使用限额",
+  "maintenance": "系统维护中，请稍后访问",
+  "unknown_error": "未知错误，请联系支持"
+}

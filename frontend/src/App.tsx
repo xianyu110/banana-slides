@@ -5,8 +5,10 @@ import { History } from './pages/History';
 import { OutlineEditor } from './pages/OutlineEditor';
 import { DetailEditor } from './pages/DetailEditor';
 import { SlidePreview } from './pages/SlidePreview';
+import { Auth } from './pages/Auth';
 import { useProjectStore } from './store/useProjectStore';
 import { Loading, useToast } from './components/shared';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
   const { currentProject, syncProject, error, setError } = useProjectStore();
@@ -29,17 +31,20 @@ function App() {
   }, [error, setError, show]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/project/:projectId/outline" element={<OutlineEditor />} />
-        <Route path="/project/:projectId/detail" element={<DetailEditor />} />
-        <Route path="/project/:projectId/preview" element={<SlidePreview />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <ToastContainer />
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/project/:projectId/outline" element={<OutlineEditor />} />
+          <Route path="/project/:projectId/detail" element={<DetailEditor />} />
+          <Route path="/project/:projectId/preview" element={<SlidePreview />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <ToastContainer />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

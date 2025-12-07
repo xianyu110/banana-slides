@@ -36,53 +36,79 @@ def _format_reference_files_xml(reference_files_content: Optional[List[Dict[str,
     return '\n'.join(xml_parts)
 
 
-def get_outline_generation_prompt(idea_prompt: str, reference_files_content: Optional[List[Dict[str, str]]] = None) -> str:
+def get_outline_generation_prompt(idea_prompt: str, reference_files_content: Optional[List[Dict[str, str]]] = None, language: str = 'zh') -> str:
     """
     生成 PPT 大纲的 prompt
-    
+
     Args:
         idea_prompt: 用户的想法/需求
         reference_files_content: 可选的参考文件内容列表
-        
+        language: 生成内容的语言 ('zh' 或 'en')
+
     Returns:
         格式化后的 prompt 字符串
     """
     files_xml = _format_reference_files_xml(reference_files_content)
-    
-    prompt = dedent(f"""\
-    You are a helpful assistant that generates an outline for a ppt.
-    
-    You can organize the content in two ways:
-    
-    1. Simple format (for short PPTs without major sections):
-    [{{"title": "title1", "points": ["point1", "point2"]}}, {{"title": "title2", "points": ["point1", "point2"]}}]
-    
-    2. Part-based format (for longer PPTs with major sections):
-    [
-      {{
+
+    # 根据语言选择输出指令
+    if language == 'en':
+        language_instruction = "Output the entire response in English."
+        example_structure = """[
+      {
         "part": "Part 1: Introduction",
         "pages": [
-          {{"title": "Welcome", "points": ["point1", "point2"]}},
-          {{"title": "Overview", "points": ["point1", "point2"]}}
+          {"title": "Welcome", "points": ["point1", "point2"]},
+          {"title": "Overview", "points": ["point1", "point2"]}
+        ]
+      },
+      {
+        "part": "Part 2: Main Content",
+        "pages": [
+          {"title": "Topic 1", "points": ["point1", "point2"]},
+          {"title": "Topic 2", "points": ["point1", "point2"]}
+        ]
+      }
+    ]"""
+    else:
+        language_instruction = "使用全中文输出。"
+        example_structure = """[
+      {{
+        "part": "第一部分：引言",
+        "pages": [
+          {{"title": "欢迎", "points": ["要点1", "要点2"]}},
+          {{"title": "概述", "points": ["要点1", "要点2"]}}
         ]
       }},
       {{
-        "part": "Part 2: Main Content",
+        "part": "第二部分：主要内容",
         "pages": [
-          {{"title": "Topic 1", "points": ["point1", "point2"]}},
-          {{"title": "Topic 2", "points": ["point1", "point2"]}}
+          {{"title": "主题1", "points": ["要点1", "要点2"]}},
+          {{"title": "主题2", "points": ["要点1", "要点2"]}}
         ]
       }}
-    ]
-    
+    ]"""
+
+    prompt = dedent(f"""\
+    You are a helpful assistant that generates an outline for a PPT presentation.
+
+    You can organize the content in two ways:
+
+    1. Simple format (for short PPTs without major sections):
+    [{{"title": "title1", "points": ["point1", "point2"]}}, {{"title": "title2", "points": ["point1", "point2"]}}]
+
+    2. Part-based format (for longer PPTs with major sections):
+    {example_structure}
+
     Choose the format that best fits the content. Use parts when the PPT has clear major sections.
-    
-    The user's request: {idea_prompt}. Now generate the outline, don't include any other text.
-    使用全中文输出。
+
+    The user's request: {idea_prompt}
+
+    Now generate the outline in JSON format. Do not include any other text.
+    {language_instruction}
     """)
-    
+
     final_prompt = files_xml + prompt
-    logger.debug(f"[get_outline_generation_prompt] Final prompt:\n{final_prompt}")
+    logger.debug(f"[get_outline_generation_prompt] Final prompt (language={language}):\n{final_prompt}")
     return final_prompt
 
 

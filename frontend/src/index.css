@@ -9,7 +9,7 @@
   --banana-yellow-dark: #FFC700;
   --banana-yellow-pale: #FFF9E6;
 
-  /* 中性色 - 黑白灰 */
+  /* 中性色 - 亮色模式 */
   --black: #1A1A1A;
   --black-80: #4A4A4A;
   --black-60: #757575;
@@ -22,10 +22,78 @@
   --error: #FF4D4F;
   --info: #1890FF;
 
+  /* 背景色 */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F5;
+  --bg-tertiary: #FAFAFA;
+  --bg-inverse: #1A1A1A;
+
+  /* 文本色 */
+  --text-primary: #1A1A1A;
+  --text-secondary: #4A4A4A;
+  --text-tertiary: #757575;
+  --text-inverse: #FFFFFF;
+  --text-disabled: #BFBFBF;
+
+  /* 边框色 */
+  --border-primary: #D9D9D9;
+  --border-secondary: #F0F0F0;
+  --border-inverse: #4A4A4A;
+
+  /* 阴影 */
+  --shadow-small: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-large: 0 10px 15px rgba(0, 0, 0, 0.1);
+
   /* 过渡 */
   --transition-fast: 150ms ease-in-out;
   --transition-base: 250ms ease-in-out;
   --transition-slow: 350ms ease-in-out;
+}
+
+/* 暗色模式 */
+.dark {
+  /* 主色 - 黄色系（暗色模式下稍微调暗） */
+  --banana-yellow: #E6C200;
+  --banana-yellow-light: #E6C200;
+  --banana-yellow-dark: #D4AF00;
+  --banana-yellow-pale: #2D2817;
+
+  /* 中性色 - 暗色模式 */
+  --black: #E8E8E8;
+  --black-80: #B0B0B0;
+  --black-60: #8C8C8C;
+  --black-10: #2D2D2D;
+  --white: #0F0F0F;
+
+  /* 功能色 */
+  --success: #49AA19;
+  --warning: #D48806;
+  --error: #DC4446;
+  --info: #177DDC;
+
+  /* 背景色 */
+  --bg-primary: #0F0F0F;
+  --bg-secondary: #1F1F1F;
+  --bg-tertiary: #2A2A2A;
+  --bg-inverse: #FFFFFF;
+
+  /* 文本色 */
+  --text-primary: #E8E8E8;
+  --text-secondary: #B0B0B0;
+  --text-tertiary: #8C8C8C;
+  --text-inverse: #0F0F0F;
+  --text-disabled: #595959;
+
+  /* 边框色 */
+  --border-primary: #434343;
+  --border-secondary: #303030;
+  --border-inverse: #B0B0B0;
+
+  /* 阴影 */
+  --shadow-small: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-large: 0 10px 15px rgba(0, 0, 0, 0.4);
 }
 
 * {

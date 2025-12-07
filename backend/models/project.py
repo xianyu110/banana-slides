@@ -13,6 +13,7 @@ class Project(db.Model):
     __tablename__ = 'projects'
     
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False, index=True)
     idea_prompt = db.Column(db.Text, nullable=True)
     outline_text = db.Column(db.Text, nullable=True)  # 用户输入的大纲文本（用于outline类型）
     description_text = db.Column(db.Text, nullable=True)  # 用户输入的描述文本（用于description类型）
@@ -24,7 +25,8 @@ class Project(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    pages = db.relationship('Page', back_populates='project', lazy='dynamic', 
+    user = db.relationship('User', backref=db.backref('projects', lazy='dynamic', cascade='all, delete-orphan'))
+    pages = db.relationship('Page', back_populates='project', lazy='dynamic',
                            cascade='all, delete-orphan', order_by='Page.order_index')
     tasks = db.relationship('Task', back_populates='project', lazy='dynamic',
                            cascade='all, delete-orphan')
