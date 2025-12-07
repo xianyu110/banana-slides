@@ -9,7 +9,7 @@ import { login, register, getOAuthAuthorizationUrl, handleOAuthCallback } from '
 type AuthMode = 'login' | 'register';
 
 export const Auth: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'auth', 'errors']);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { show, ToastContainer } = useToast();
@@ -53,13 +53,13 @@ export const Auth: React.FC = () => {
           expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
         };
         loginStore(user, authTokens);
-        show({ message: t('auth.login_success'), type: 'success' });
+        show({ message: t('auth:login_success'), type: 'success' });
         navigate('/');
       }
     } catch (error: any) {
       console.error('OAuth callback error:', error);
       show({
-        message: error?.response?.data?.error?.message || t('auth.oauth_error'),
+        message: error?.response?.data?.error?.message || t('auth:oauth_error'),
         type: 'error',
       });
     } finally {
@@ -71,12 +71,12 @@ export const Auth: React.FC = () => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      show({ message: t('errors.validation_error'), type: 'error' });
+      show({ message: t('errors:validation_error'), type: 'error' });
       return;
     }
 
     if (mode === 'register' && !formData.username) {
-      show({ message: t('errors.validation_error'), type: 'error' });
+      show({ message: t('errors:validation_error'), type: 'error' });
       return;
     }
 
@@ -105,7 +105,7 @@ export const Auth: React.FC = () => {
         };
         loginStore(user, authTokens);
         show({
-          message: mode === 'login' ? t('auth.login_success') : t('auth.register_success'),
+          message: mode === 'login' ? t('auth:login_success') : t('auth:register_success'),
           type: 'success',
         });
         navigate('/');
@@ -115,7 +115,7 @@ export const Auth: React.FC = () => {
       show({
         message:
           error?.response?.data?.error?.message ||
-          (mode === 'login' ? t('auth.login_error') : t('auth.register_error')),
+          (mode === 'login' ? t('auth:login_error') : t('auth:register_error')),
         type: 'error',
       });
     } finally {
@@ -133,7 +133,7 @@ export const Auth: React.FC = () => {
     } catch (error: any) {
       console.error('OAuth error:', error);
       show({
-        message: error?.response?.data?.error?.message || t('auth.oauth_error'),
+        message: error?.response?.data?.error?.message || t('auth:oauth_error'),
         type: 'error',
       });
     }
@@ -154,7 +154,7 @@ export const Auth: React.FC = () => {
           className="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
         >
           <ArrowLeft size={20} />
-          <span>{t('common.buttons.back')}</span>
+          <span>{t('buttons.back')}</span>
         </button>
 
         {/* 登录/注册卡片 */}
@@ -169,12 +169,12 @@ export const Auth: React.FC = () => {
               />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {mode === 'login' ? t('auth.login') : t('auth.register')}
+              {mode === 'login' ? t('auth:login') : t('auth:register')}
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {mode === 'login'
-                ? t('auth.login_subtitle')
-                : t('auth.register_subtitle')}
+                ? t('auth:login_subtitle')
+                : t('auth:register_subtitle')}
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export const Auth: React.FC = () => {
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
               <Chrome size={20} />
-              <span>{t('auth.continue_with_google')}</span>
+              <span>{t('auth:continue_with_google')}</span>
             </button>
 
             <button
@@ -195,7 +195,7 @@ export const Auth: React.FC = () => {
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-900 dark:bg-gray-700 border border-gray-800 dark:border-gray-600 rounded-lg text-white hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
               <Github size={20} />
-              <span>{t('auth.continue_with_github')}</span>
+              <span>{t('auth:continue_with_github')}</span>
             </button>
           </div>
 
@@ -206,7 +206,7 @@ export const Auth: React.FC = () => {
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                {t('auth.or_continue_with_email')}
+                {t('auth:or_continue_with_email')}
               </span>
             </div>
           </div>
@@ -216,7 +216,7 @@ export const Auth: React.FC = () => {
             {mode === 'register' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('auth.username')}
+                  {t('auth:username')}
                 </label>
                 <div className="relative">
                   <User
@@ -230,7 +230,7 @@ export const Auth: React.FC = () => {
                       setFormData({ ...formData, username: e.target.value })
                     }
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-banana-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
-                    placeholder={t('auth.username_placeholder')}
+                    placeholder={t('auth:username_placeholder')}
                   />
                 </div>
               </div>
@@ -238,7 +238,7 @@ export const Auth: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('auth.email')}
+                {t('auth:email')}
               </label>
               <div className="relative">
                 <Mail
@@ -252,14 +252,14 @@ export const Auth: React.FC = () => {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-banana-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
-                  placeholder={t('auth.email_placeholder')}
+                  placeholder={t('auth:email_placeholder')}
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('auth.password')}
+                {t('auth:password')}
               </label>
               <div className="relative">
                 <Lock
@@ -273,7 +273,7 @@ export const Auth: React.FC = () => {
                     setFormData({ ...formData, password: e.target.value })
                   }
                   className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-banana-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
-                  placeholder={t('auth.password_placeholder')}
+                  placeholder={t('auth:password_placeholder')}
                 />
                 <button
                   type="button"
@@ -290,7 +290,7 @@ export const Auth: React.FC = () => {
               loading={isLoading}
               className="w-full bg-gradient-to-r from-banana-500 to-orange-500 hover:from-banana-600 hover:to-orange-600 text-black font-semibold py-3"
             >
-              {mode === 'login' ? t('auth.login') : t('auth.register')}
+              {mode === 'login' ? t('auth:login') : t('auth:register')}
             </Button>
           </form>
 
@@ -298,21 +298,21 @@ export const Auth: React.FC = () => {
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600 dark:text-gray-400">
               {mode === 'login'
-                ? t('auth.no_account')
-                : t('auth.already_have_account')}
+                ? t('auth:no_account')
+                : t('auth:already_have_account')}
             </span>
             <button
               onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
               className="ml-2 text-banana-600 dark:text-banana-400 hover:underline font-medium"
             >
-              {mode === 'login' ? t('auth.register') : t('auth.login')}
+              {mode === 'login' ? t('auth:register') : t('auth:login')}
             </button>
           </div>
 
           {/* 提示：可选登录 */}
           <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
-              💡 {t('auth.optional_login_hint')}
+              💡 {t('auth:optional_login_hint')}
             </p>
           </div>
         </div>

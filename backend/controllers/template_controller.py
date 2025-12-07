@@ -10,7 +10,11 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# 独立的系统模板蓝图
+system_templates_bp = Blueprint('system_templates', __name__, url_prefix='/api')
+# 项目相关的模板蓝图
 template_bp = Blueprint('templates', __name__, url_prefix='/api/projects')
+# 用户模板蓝图
 user_template_bp = Blueprint('user_templates', __name__, url_prefix='/api/user-templates')
 
 
@@ -93,7 +97,7 @@ def delete_template(project_id):
         return error_response('SERVER_ERROR', str(e), 500)
 
 
-@template_bp.route('/templates', methods=['GET'])
+@system_templates_bp.route('/templates', methods=['GET'])
 def get_system_templates():
     """
     GET /api/templates - Get system preset templates

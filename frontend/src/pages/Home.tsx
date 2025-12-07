@@ -15,7 +15,7 @@ import { logout as logoutApi } from '@/api/auth';
 type CreationType = 'idea' | 'outline' | 'description';
 
 export const Home: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'auth', 'project', 'errors']);
   const navigate = useNavigate();
   const { initializeProject, isGlobalLoading } = useProjectStore();
   const { show, ToastContainer } = useToast();
@@ -104,7 +104,7 @@ export const Home: React.FC = () => {
             await handleFileUpload(file);
           } else {
             console.log('File type not allowed');
-            show({ message: `${t('errors.invalid_file_type')}: ${fileExt}`, type: 'info' });
+            show({ message: `${t('errors:invalid_file_type')}: ${fileExt}`, type: 'info' });
           }
         }
       }
@@ -122,12 +122,12 @@ export const Home: React.FC = () => {
       const response = await uploadReferenceFile(file, null);
       if (response.data?.file) {
         setReferenceFiles(prev => [...prev, response.data.file]);
-        show({ message: t('common.status.success'), type: 'success' });
+        show({ message: t('status.success'), type: 'success' });
       }
     } catch (error: any) {
       console.error('文件上传失败:', error);
       show({
-        message: `${t('errors.file_upload_error')}: ${error?.response?.data?.error?.message || error.message || t('errors.unknown_error')}`,
+        message: `${t('errors:file_upload_error')}: ${error?.response?.data?.error?.message || error.message || t('errors:unknown_error')}`,
         type: 'error'
       });
     } finally {
@@ -165,7 +165,7 @@ export const Home: React.FC = () => {
       });
       return [...updated, ...newFiles];
     });
-    show({ message: `${t('common.status.success')} (${selectedFiles.length} ${t('common.form.file')})`, type: 'success' });
+    show({ message: `${t('status.success')} (${selectedFiles.length} 个文件)`, type: 'success' });
   };
 
   // 获取当前已选择的文件ID列表，传递给选择器（使用 useMemo 避免每次渲染都重新计算）
@@ -189,21 +189,21 @@ export const Home: React.FC = () => {
   const tabConfig = {
     idea: {
       icon: <Sparkles size={20} />,
-      label: t('project.creation.idea_tab'),
-      placeholder: t('project.creation.idea_placeholder'),
-      description: t('project.creation.idea_help'),
+      label: t('project:creation.idea_tab'),
+      placeholder: t('project:creation.idea_placeholder'),
+      description: t('project:creation.idea_help'),
     },
     outline: {
       icon: <FileText size={20} />,
-      label: t('project.creation.outline_tab'),
-      placeholder: t('project.creation.outline_placeholder'),
-      description: t('project.creation.outline_help'),
+      label: t('project:creation.outline_tab'),
+      placeholder: t('project:creation.outline_placeholder'),
+      description: t('project:creation.outline_help'),
     },
     description: {
       icon: <FileEdit size={20} />,
-      label: t('project.creation.description_tab'),
-      placeholder: t('project.creation.description_placeholder'),
-      description: t('project.creation.description_help'),
+      label: t('project:creation.description_tab'),
+      placeholder: t('project:creation.description_placeholder'),
+      description: t('project:creation.description_help'),
     },
   };
 
@@ -243,28 +243,28 @@ export const Home: React.FC = () => {
         await logoutApi(accessToken);
       }
       logoutStore();
-      show({ message: t('auth.logout_success'), type: 'success' });
+      show({ message: t('auth:logout_success'), type: 'success' });
     } catch (error) {
       console.error('Logout error:', error);
       // 即使 API 调用失败也要清除本地状态
       logoutStore();
-      show({ message: t('auth.logout_success'), type: 'success' });
+      show({ message: t('auth:logout_success'), type: 'success' });
     }
   };
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      show({ message: t('errors.validation_error'), type: 'error' });
+      show({ message: t('errors:validation_error'), type: 'error' });
       return;
     }
 
     // 检查是否有正在解析的文件
-    const parsingFiles = referenceFiles.filter(f => 
+    const parsingFiles = referenceFiles.filter(f =>
       f.parse_status === 'pending' || f.parse_status === 'parsing'
     );
     if (parsingFiles.length > 0) {
       show({
-        message: `${t('common.loading.processing')} ${parsingFiles.length} ${t('common.form.file')}...`,
+        message: `${t('loading.processing')} ${parsingFiles.length} 个文件...`,
         type: 'info'
       });
       return;
@@ -285,7 +285,7 @@ export const Home: React.FC = () => {
       // 根据类型跳转到不同页面
       const projectId = localStorage.getItem('currentProjectId');
       if (!projectId) {
-        show({ message: t('errors.server_error'), type: 'error' });
+        show({ message: t('errors:server_error'), type: 'error' });
         return;
       }
       
@@ -352,7 +352,7 @@ export const Home: React.FC = () => {
               onClick={handleOpenMaterialModal}
               className="hidden sm:inline-flex hover:bg-banana-50/50"
             >
-              <span className="hidden md:inline">{t('project.dashboard.new_project')}</span>
+              <span className="hidden md:inline">{t('project:dashboard.new_project')}</span>
             </Button>
             <Button
               variant="ghost"
@@ -360,8 +360,8 @@ export const Home: React.FC = () => {
               onClick={() => navigate('/history')}
               className="text-xs md:text-sm hover:bg-banana-50/50"
             >
-              <span className="hidden sm:inline">{t('common.navigation.projects')}</span>
-              <span className="sm:hidden">{t('common.navigation.projects')}</span>
+              <span className="hidden sm:inline">{t('navigation.projects')}</span>
+              <span className="sm:hidden">{t('navigation.projects')}</span>
             </Button>
             <LanguageSwitcher variant="toggle" className="hidden sm:flex" />
             <ThemeToggle variant="toggle" className="hidden sm:flex" />
@@ -372,7 +372,7 @@ export const Home: React.FC = () => {
               onClick={() => setIsSettingsModalOpen(true)}
               className="hover:bg-banana-50/50"
             >
-              <span className="hidden md:inline">{t('common.navigation.settings')}</span>
+              <span className="hidden md:inline">{t('navigation.settings')}</span>
             </Button>
             <Button
               variant="ghost"
@@ -380,7 +380,7 @@ export const Home: React.FC = () => {
               className="hover:bg-banana-50/50 dark:hover:bg-gray-800"
               onClick={() => setIsOnboardingOpen(true)}
             >
-              <span className="hidden md:inline">{t('common.navigation.help')}</span>
+              <span className="hidden md:inline">{t('navigation.help')}</span>
               <span className="md:hidden">帮助</span>
             </Button>
 
@@ -407,7 +407,7 @@ export const Home: React.FC = () => {
                       className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
                     >
                       <LogOut size={16} />
-                      <span>{t('auth.logout')}</span>
+                      <span>{t('auth:logout')}</span>
                     </button>
                   </div>
                 </div>
@@ -420,7 +420,7 @@ export const Home: React.FC = () => {
                 onClick={() => navigate('/auth')}
                 className="hover:bg-banana-50/50 dark:hover:bg-gray-800"
               >
-                <span className="hidden md:inline">{t('auth.login')}</span>
+                <span className="hidden md:inline">{t('auth:login')}</span>
               </Button>
             )}
           </div>
@@ -542,8 +542,8 @@ export const Home: React.FC = () => {
                 className="shadow-sm text-xs md:text-sm px-3 md:px-4"
               >
                 {referenceFiles.some(f => f.parse_status === 'pending' || f.parse_status === 'parsing')
-                  ? t('common.loading.processing')
-                  : t('common.buttons.next')}
+                  ? t('loading.processing')
+                  : t('buttons.next')}
               </Button>
             </div>
           </div>
