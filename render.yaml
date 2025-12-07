@@ -1,0 +1,43 @@
+services:
+  # Backend API Service
+  - type: web
+    name: banana-slides-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: GOOGLE_API_KEY
+        sync: false  # 需要在Render控制台手动设置
+      - key: GOOGLE_API_BASE
+        value: https://apipro.maynor1024.live/v1beta
+      - key: GOOGLE_IMAGE_API_KEY
+        sync: false  # 可选，如果不设置则使用GOOGLE_API_KEY
+      - key: GOOGLE_IMAGE_API_BASE
+        value: https://apipro.maynor1024.live/v1beta
+      - key: SECRET_KEY
+        generateValue: true  # Render自动生成
+      - key: CORS_ORIGINS
+        value: "*"  # 部署后更新为实际的Vercel域名
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MAX_DESCRIPTION_WORKERS
+        value: 5
+      - key: MAX_IMAGE_WORKERS
+        value: 8
+      - key: DEFAULT_ASPECT_RATIO
+        value: "16:9"
+      - key: DEFAULT_RESOLUTION
+        value: "2K"
+      # MinerU配置（可选）
+      - key: MINERU_TOKEN
+        sync: false
+      - key: MINERU_API_BASE
+        value: https://mineru.net
+      - key: IMAGE_CAPTION_MODEL
+        value: gemini-2.5-flash

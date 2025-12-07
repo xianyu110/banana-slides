@@ -156,8 +156,27 @@ GOOGLE_API_BASE=https://apipro.maynor1024.live/v1beta
 
 ## 📦 使用方法
 
-### 使用 Docker Compose🐳（推荐）
-这是最简单的部署方式，可以一键启动前后端服务。
+### 🌟 云端部署（推荐用于生产环境）
+
+**前端（Vercel） + 后端（Render）免费部署**
+
+- ✅ 完全免费
+- ✅ 一键部署
+- ✅ 自动HTTPS
+- ✅ 全球CDN加速
+
+**📚 [查看详细部署教程](./docs/DEPLOYMENT.md)**
+
+**快速开始**：
+1. Fork本项目到你的GitHub
+2. 在Render部署后端（5分钟）
+3. 在Vercel部署前端（3分钟）
+4. 完成！🎉
+
+---
+
+### 使用 Docker Compose🐳（推荐用于本地开发）
+这是最简单的本地部署方式，可以一键启动前后端服务。
 
 <details>
   <summary>📒Windows用户说明</summary>

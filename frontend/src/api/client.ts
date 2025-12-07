@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-// 开发环境：通过 Vite proxy 转发
-// 生产环境：通过 nginx proxy 转发
-const API_BASE_URL = '';
+// API基础URL配置
+// 开发环境：使用Vite proxy转发到本地后端
+// 生产环境：使用环境变量指定的后端API地址
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 // 创建 axios 实例
 export const apiClient = axios.create({
