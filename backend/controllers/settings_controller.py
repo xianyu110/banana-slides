@@ -56,57 +56,52 @@ def update_api_config():
 @settings_bp.route('/api-presets', methods=['GET'])
 def get_api_presets():
     """Get predefined API configuration presets"""
-    # Import built-in defaults
-    from default_config import DEFAULT_TEXT_API_KEY, DEFAULT_IMAGE_API_KEY
-
-    # Get default keys from environment or use built-in defaults
-    default_text_key = os.getenv('DEFAULT_TEXT_API_KEY', DEFAULT_TEXT_API_KEY)
-    default_image_key = os.getenv('DEFAULT_IMAGE_API_KEY', DEFAULT_IMAGE_API_KEY)
-
     presets = [
         {
-            'id': 'builtin',
-            'name': '🎁 内置配置（推荐新手）',
-            'description': '使用系统内置的API密钥，开箱即用',
+            'id': 'relay_apipro',
+            'name': '🚀 中转API（推荐）',
+            'description': '使用中转API https://apipro.maynor1024.live/ 访问Gemini，稳定可靠，支持文本和图片生成。需要自己的 API Key（格式：sk-xxx）',
             'config': {
-                'text_api_base': 'https://generativelanguage.googleapis.com',
+                'text_api_base': 'https://apipro.maynor1024.live',
                 'image_api_base': 'https://apipro.maynor1024.live',
-                'requires_key': False,
-                'text_api_key': default_text_key,
-                'image_api_key': default_image_key,
+                'requires_key': True,
+                'key_format': 'sk-xxx（文本和图片使用相同的Key）',
+                'get_key_url': 'https://apipro.maynor1024.live/',
             }
         },
         {
             'id': 'official',
-            'name': '官方 Google API（全部）',
-            'description': '使用官方 Google Gemini API，稳定可靠',
+            'name': '🌐 官方 Google API',
+            'description': '直接使用 Google Gemini 官方API，需要自己的 API Key',
             'config': {
                 'text_api_base': 'https://generativelanguage.googleapis.com',
                 'image_api_base': 'https://generativelanguage.googleapis.com',
                 'requires_key': True,
+                'key_format': 'AIza...',
+                'get_key_url': 'https://aistudio.google.com/app/apikey',
             }
         },
         {
             'id': 'hybrid_apipro',
-            'name': '混合模式 - apipro.maynor1024.live',
-            'description': '文本使用官方API，图片使用第三方代理',
+            'name': '🔀 混合模式（官方文本 + 中转图片）',
+            'description': '文本使用官方Google API，图片使用中转API。需要两个不同的 API Key',
             'config': {
                 'text_api_base': 'https://generativelanguage.googleapis.com',
                 'image_api_base': 'https://apipro.maynor1024.live',
                 'requires_key': True,
-                'image_key_format': 'sk-xxx'
+                'key_format': '文本：AIza... / 图片：sk-xxx'
             }
         },
         {
-            'id': 'hybrid_nextai',
-            'name': '混合模式 - api.nextaicore.com',
-            'description': '文本使用官方API，图片使用第三方代理（可能不支持图片生成）',
+            'id': 'relay_nextai',
+            'name': '🔄 NextAI 中转',
+            'description': '使用 api.nextaicore.com 中转API（注意：可能不支持图片生成）',
             'config': {
-                'text_api_base': 'https://generativelanguage.googleapis.com',
+                'text_api_base': 'https://api.nextaicore.com',
                 'image_api_base': 'https://api.nextaicore.com',
                 'requires_key': True,
-                'image_key_format': 'sk-xxx',
-                'warning': '此API可能不支持图片生成'
+                'key_format': 'sk-xxx',
+                'warning': '⚠️ 此API可能不支持图片生成功能'
             }
         },
     ]

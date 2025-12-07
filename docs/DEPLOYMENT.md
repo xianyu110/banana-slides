@@ -64,20 +64,31 @@
 #### 必需配置：
 
 ```env
-# Gemini API配置（必填）
-GOOGLE_API_KEY=你的API密钥
-GOOGLE_API_BASE=https://apipro.maynor1024.live/v1beta
-
-# 图片生成API配置（可选，不填则使用上面的配置）
-GOOGLE_IMAGE_API_KEY=你的API密钥
-GOOGLE_IMAGE_API_BASE=https://apipro.maynor1024.live/v1beta
-
 # CORS配置（先设置为*，部署后更新）
 CORS_ORIGINS=*
 
 # 应用配置
 PORT=5000
 LOG_LEVEL=INFO
+```
+
+> **💡 重要提示**：
+> - **API密钥现已改为前端配置**：无需在后端配置 `GOOGLE_API_KEY` 等环境变量
+> - 部署完成后，在前端界面的 "⚙️ 设置" 中配置API密钥即可
+> - 推荐使用中转API：https://apipro.maynor1024.live/
+
+#### 可选的后端API配置：
+
+如果你希望在后端预设默认API配置（不推荐），可以添加：
+
+```env
+# Gemini API配置（可选，推荐在前端配置）
+GOOGLE_API_KEY=你的API密钥
+GOOGLE_API_BASE=https://apipro.maynor1024.live
+
+# 图片生成API配置（可选）
+GOOGLE_IMAGE_API_KEY=你的API密钥
+GOOGLE_IMAGE_API_BASE=https://apipro.maynor1024.live
 ```
 
 #### 可选配置：
@@ -183,12 +194,46 @@ CORS_ORIGINS=https://banana-slides.vercel.app,https://你的自定义域名.com
 
 ---
 
+## 配置API密钥
+
+部署完成后，**必须在前端界面配置API密钥**才能使用AI功能：
+
+### 步骤1：访问前端设置
+
+1. 打开你部署的前端URL（如：`https://banana-slides.vercel.app`）
+2. 点击右上角的 **⚙️ 设置** 按钮
+
+### 步骤2：选择API预设
+
+在弹出的API配置窗口中：
+
+1. 在 "快速配置预设" 下拉框中选择 **🚀 中转API（推荐）**
+2. 系统会自动填充以下配置：
+   - 文本API Base: `https://apipro.maynor1024.live`
+   - 图片API Base: `https://apipro.maynor1024.live`
+
+### 步骤3：输入API密钥
+
+1. 在 "文本生成 API" 和 "图片生成 API" 的 **API Key** 字段中输入你的密钥（格式：`sk-xxx`）
+2. 两个字段可以使用相同的密钥
+3. 点击 **保存配置**
+
+✅ **配置完成！** 现在可以开始使用AI生成PPT了。
+
+> **💡 提示**：
+> - 中转API地址：https://apipro.maynor1024.live/
+> - 配置保存在数据库中，无需每次访问都配置
+> - 如需更换API，随时可以在设置中修改
+
+---
+
 ## 测试部署
 
 1. 访问你的Vercel前端URL
-2. 尝试创建一个新项目
-3. 测试AI生成功能
-4. 测试PPT导出功能
+2. 配置API密钥（见上一节）
+3. 尝试创建一个新项目
+4. 测试AI生成功能
+5. 测试PPT导出功能
 
 如果一切正常，恭喜你部署成功！🎉
 

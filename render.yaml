@@ -12,18 +12,20 @@ services:
     envVars:
       - key: PORT
         value: 5000
-      - key: GOOGLE_API_KEY
-        sync: false  # 需要在Render控制台手动设置
-      - key: GOOGLE_API_BASE
-        value: https://apipro.maynor1024.live/v1beta
-      - key: GOOGLE_IMAGE_API_KEY
-        sync: false  # 可选，如果不设置则使用GOOGLE_API_KEY
-      - key: GOOGLE_IMAGE_API_BASE
-        value: https://apipro.maynor1024.live/v1beta
       - key: SECRET_KEY
         generateValue: true  # Render自动生成
       - key: CORS_ORIGINS
         value: "*"  # 部署后更新为实际的Vercel域名
+      # 注意：API密钥现已改为前端配置，无需在此设置
+      # 如需后端默认配置，可添加以下可选环境变量：
+      # - key: GOOGLE_API_KEY
+      #   sync: false
+      # - key: GOOGLE_API_BASE
+      #   value: https://apipro.maynor1024.live
+      # - key: GOOGLE_IMAGE_API_KEY
+      #   sync: false
+      # - key: GOOGLE_IMAGE_API_BASE
+      #   value: https://apipro.maynor1024.live
       - key: LOG_LEVEL
         value: INFO
       - key: MAX_DESCRIPTION_WORKERS
