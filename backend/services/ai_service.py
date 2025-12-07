@@ -438,7 +438,8 @@ class AIService:
                         "content": content_items
                     }
                 ],
-                "max_tokens": 4096
+                "max_tokens": 16384,  # Increased max_tokens to handle larger image responses
+                "stream": False  # Ensure we get the complete response at once
             }
 
             # Make HTTP request to chat endpoint
@@ -455,7 +456,13 @@ class AIService:
             # Parse response
             result = response.json()
             logger.info(f"Chat API response keys: {result.keys()}")
-            logger.info(f"Full API response: {json.dumps(result, indent=2, ensure_ascii=False)}")
+            logger.info(f"Response status code: {response.status_code}")
+            logger.info(f"Response headers: {dict(response.headers)}")
+
+            # Log response size and content safely
+            response_str = json.dumps(result, indent=2, ensure_ascii=False)
+            logger.info(f"Full API response length: {len(response_str)} characters")
+            logger.info(f"Full API response: {response_str}")
 
             # Check if it's a different API format (e.g., from ImageGen model)
             if 'data' in result and len(result['data']) > 0:
@@ -483,7 +490,24 @@ class AIService:
                 content = message.get('content', '')
 
                 logger.info(f"Response content type: {type(content)}, length: {len(str(content)) if content else 0}")
-                logger.info(f"Response content: {content}")
+                logger.info(f"Response content preview (first 500 chars): {str(content)[:500]}")
+                logger.info(f"Response content preview (last 500 chars): {str(content)[-500:] if content else 'None'}")
+
+                # Full content logging (only if not too large)
+                if content and len(str(content)) < 10000:
+                    logger.info(f"Response content: {content}")
+                elif content:
+                    logger.info(f"Response content too large ({len(str(content))} chars), logging to file")
+                    # Log large content to file
+                    try:
+                        with open('logs/debug_content.log', 'w', encoding='utf-8') as f:
+                            f.write(f"Timestamp: {datetime.now().isoformat()}\n")
+                            f.write(f"Content type: {type(content)}\n")
+                            f.write(f"Content length: {len(str(content))}\n")
+                            f.write(f"Full content:\n{content}\n")
+                        logger.info("Logged full content to logs/debug_content.log")
+                    except Exception as log_error:
+                        logger.error(f"Failed to log content to file: {log_error}")
 
                 # Check for error in other fields
                 if 'error' in result:
@@ -561,8 +585,17 @@ class AIService:
 
                 # Try to decode base64 to image
                 try:
+                    # Clean up the base64 data first
+                    if isinstance(base64_data, str):
+                        # Remove any whitespace, newlines, etc.
+                        base64_data = ''.join(base64_data.split())
+
+                    logger.debug(f"Attempting to decode {len(base64_data)} chars of base64 data")
+                    logger.debug(f"Base64 data preview (first 100 chars): {base64_data[:100]}")
+                    logger.debug(f"Base64 data preview (last 100 chars): {base64_data[-100:]}")
+
                     image_data = base64.b64decode(base64_data)
-                    logger.debug(f"Decoded {len(image_data)} bytes of image data")
+                    logger.info(f"Successfully decoded {len(image_data)} bytes of image data")
 
                     # Check if it looks like valid image data
                     if len(image_data) < 100:
