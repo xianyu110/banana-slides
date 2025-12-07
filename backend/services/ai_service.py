@@ -644,19 +644,46 @@ class AIService:
                         logger.error(f"Failed to download image from URL {content_str}: {str(url_error)}")
                         raise ValueError(f"Failed to download image from URL: {str(url_error)}")
                 else:
-                    logger.debug("Assuming pure base64 format")
-                    # Assume it's pure base64
-                    # First check if it looks like base64
+                    logger.debug("Checking content type - could be text or base64")
+
+                    # Enhanced content type detection
                     if isinstance(content_str, str):
+                        # First, check if it's clearly text content (not base64)
+                        text_indicators = [
+                            # Chinese characters
+                            content_str.encode('utf-8', errors='ignore') != content_str.encode('ascii', errors='ignore'),
+                            # Common text patterns
+                            any(pattern in content_str for pattern in [
+                                '毕业设计', '答辩', 'PPT', '制作', '指南', '结构', '内容',
+                                '封面', '目录', '引言', '技术', '方案', '成果', '总结',
+                                'the', 'and', 'is', 'to', 'of', 'in', 'with', 'for', 'on'
+                            ]),
+                            # Contains spaces or punctuation typical of text
+                            any(char in content_str for char in ['，', '。', '！', '？', '、', '：', '；', '"', '"', ''', ''']),
+                            # Length is reasonable for text but contains non-base64 chars
+                            len(content_str) > 50 and not re.match(r'^[A-Za-z0-9+/=\s]+$', content_str)
+                        ]
+
+                        if any(text_indicators):
+                            logger.error(f"API returned text content instead of image data")
+                            logger.error(f"Text content preview: {content_str[:200]}...")
+                            raise ValueError(f"API 返回了文本内容而不是图片。这可能是因为：\n"
+                                           f"1. API 配置错误，没有调用图片生成模型\n"
+                                           f"2. API 密钥权限不足\n"
+                                           f"3. 图片生成服务暂时不可用\n"
+                                           f"返回的内容开头：{content_str[:100]}...")
+
+                        # If it looks like it might be base64, proceed with base64 validation
+                        logger.debug("Proceeding with base64 validation")
                         # Remove whitespace
                         base64_data = content_str.strip()
 
                         # Check if it's valid base64-like string
                         if not base64_data:
                             raise ValueError(f"Empty base64 data received. Full content: {content_str}")
-                        elif len(base64_data) < 100:
-                            logger.warning(f"Base64 data seems too short: {len(base64_data)} characters")
-                            logger.warning(f"Short content: {base64_data}")
+                        elif len(base64_data) < 1000:  # Most images are larger than 1000 chars in base64
+                            logger.warning(f"Base64 data seems too short for an image: {len(base64_data)} characters")
+                            logger.warning(f"Content preview: {base64_data[:200]}")
                             # It might be an error message, try to decode it
                             try:
                                 decoded_text = base64.b64decode(base64_data + '==').decode('utf-8')
@@ -664,13 +691,22 @@ class AIService:
                                     raise ValueError(f"API returned error message: {decoded_text}")
                             except:
                                 pass
-                            raise ValueError(f"Content too short to be valid image data ({len(base64_data)} chars). Full content: {base64_data[:500]}")
+
+                            # Check if it contains typical Chinese or English text patterns
+                            if any(char in base64_data for char in '的，。了是在有和与个为这是对不对'):
+                                raise ValueError(f"API 返回了文本内容而不是图片数据。内容预览：{base64_data[:100]}...")
+
+                            raise ValueError(f"数据太短，无法作为有效图片数据 ({len(base64_data)} 字符)。有效的图片 base64 通常需要至少 1000 字符。内容预览：{base64_data[:200]}...")
 
                         # Check if it contains only base64 characters
                         import re
                         if not re.match(r'^[A-Za-z0-9+/=]+$', base64_data):
                             non_base64_chars = set(re.findall(r'[^A-Za-z0-9+/=]', base64_data))
                             logger.warning(f"Content contains non-base64 characters: {non_base64_chars}")
+                            # If there are many non-base64 characters, it's likely text
+                            if len(non_base64_chars) > len(base64_data) * 0.1:  # More than 10% non-base64
+                                logger.error(f"Content appears to be text, not base64: {content_str[:200]}...")
+                                raise ValueError(f"API 返回了文本内容而不是图片数据")
                             # It might be an error message in text format
                             if any(keyword in base64_data.lower() for keyword in error_keywords):
                                 raise ValueError(f"API returned text error message: {base64_data}")
