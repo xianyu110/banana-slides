@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb } from 'lucide-react';
-import { Button, Textarea, Card, useToast, MaterialGeneratorModal, ReferenceFileCard, ReferenceFileSelector } from '@/components/shared';
+import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb, Settings } from 'lucide-react';
+import { Button, Textarea, Card, useToast, MaterialGeneratorModal, APISettingsModal, ReferenceFileCard, ReferenceFileSelector } from '@/components/shared';
 import { TemplateSelector, getTemplateFile } from '@/components/shared/TemplateSelector';
 import { listUserTemplates, type UserTemplate, uploadReferenceFile, type ReferenceFile, associateFileToProject } from '@/api/endpoints';
 import { useProjectStore } from '@/store/useProjectStore';
@@ -19,6 +19,7 @@ export const Home: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedPresetTemplateId, setSelectedPresetTemplateId] = useState<string | null>(null);
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [userTemplates, setUserTemplates] = useState<UserTemplate[]>([]);
   const [referenceFiles, setReferenceFiles] = useState<ReferenceFile[]>([]);
@@ -301,11 +302,11 @@ export const Home: React.FC = () => {
           <div className="flex items-center gap-2">
             <img
               src="/logo.jpg"
-              alt="蕉幻 Banana Slides Logo"
+              alt="MaynorAI Banana Pro Slides Logo"
               className="w-8 h-8 md:w-12 md:h-12 rounded-lg object-cover object-center"
             />
             <span className="text-lg md:text-xl font-bold text-gray-900">
-              蕉幻
+              MaynorAI
             </span>
           </div>
           <div className="flex items-center gap-1 md:gap-4">
@@ -318,14 +319,23 @@ export const Home: React.FC = () => {
             >
               <span className="hidden md:inline">素材生成</span>
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigate('/history')}
               className="text-xs md:text-sm hover:bg-banana-50/50"
             >
               <span className="hidden sm:inline">历史项目</span>
               <span className="sm:hidden">历史</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Settings size={16} className="md:w-[18px] md:h-[18px]" />}
+              onClick={() => setIsSettingsModalOpen(true)}
+              className="hover:bg-banana-50/50"
+            >
+              <span className="hidden md:inline">设置</span>
             </Button>
             <Button variant="ghost" size="sm" className="hidden md:inline-flex hover:bg-banana-50/50">帮助</Button>
           </div>
@@ -346,7 +356,7 @@ export const Home: React.FC = () => {
               backgroundSize: '200% auto',
               animation: 'gradient 3s ease infinite',
             }}>
-              蕉幻 Banana Slides
+              MaynorAI Banana Pro Slides
             </span>
           </h1>
           
@@ -506,6 +516,11 @@ export const Home: React.FC = () => {
         projectId={null}
         isOpen={isMaterialModalOpen}
         onClose={() => setIsMaterialModalOpen(false)}
+      />
+      {/* API 设置模态 */}
+      <APISettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
       />
       {/* 参考文件选择器 */}
       {/* 在 Home 页面，始终查询全局文件，因为此时还没有项目 */}

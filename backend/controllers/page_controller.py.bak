@@ -6,7 +6,6 @@ from flask import Blueprint, request, current_app
 from models import db, Project, Page, PageImageVersion, Task
 from utils import success_response, error_response, not_found, bad_request
 from services import AIService, FileService
-from services.ai_service import get_api_config_from_db
 from services.task_manager import task_manager, generate_single_page_image_task, edit_page_image_task
 from datetime import datetime
 from pathlib import Path
@@ -234,13 +233,9 @@ def generate_page_description(project_id, page_id):
         
         # Initialize AI service
         from flask import current_app
-        # Get API config from database or environment variables
-        api_config = get_api_config_from_db()
         ai_service = AIService(
-            api_config['api_key'],
-            api_config['api_base'],
-            api_config['image_api_key'],
-            api_config['image_api_base']
+            current_app.config['GOOGLE_API_KEY'],
+            current_app.config['GOOGLE_API_BASE']
         )
         
         # Generate description
@@ -358,13 +353,9 @@ def generate_page_image(project_id, page_id):
         
         # Initialize services
         from flask import current_app
-        # Get API config from database or environment variables
-        api_config = get_api_config_from_db()
         ai_service = AIService(
-            api_config['api_key'],
-            api_config['api_base'],
-            api_config['image_api_key'],
-            api_config['image_api_base']
+            current_app.config['GOOGLE_API_KEY'],
+            current_app.config['GOOGLE_API_BASE']
         )
         
         file_service = FileService(current_app.config['UPLOAD_FOLDER'])
@@ -485,13 +476,9 @@ def edit_page_image(project_id, page_id):
         
         # Initialize services
         from flask import current_app
-        # Get API config from database or environment variables
-        api_config = get_api_config_from_db()
         ai_service = AIService(
-            api_config['api_key'],
-            api_config['api_base'],
-            api_config['image_api_key'],
-            api_config['image_api_base']
+            current_app.config['GOOGLE_API_KEY'],
+            current_app.config['GOOGLE_API_BASE']
         )
         
         file_service = FileService(current_app.config['UPLOAD_FOLDER'])

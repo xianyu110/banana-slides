@@ -88,7 +88,7 @@ def test_upload_template(project_id, image_path):
 def main():
     """Run tests"""
     print("╔════════════════════════════════╗")
-    print("║  Banana Slides API Test Suite  ║")
+    print("║  Banana Pro Slides API Test Suite  ║")
     print("╚════════════════════════════════╝")
     print()
     

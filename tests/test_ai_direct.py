@@ -16,7 +16,7 @@ def main():
     api_base = os.getenv('GOOGLE_API_BASE')
     
     print("=" * 60)
-    print("蕉幻后端 AI服务直接测试")
+    print("MaynorAI后端 AI服务直接测试")
     print("=" * 60)
     print(f"✅ API Key配置: {'是' if api_key else '否'}")
     print(f"✅ API Base: {api_base}")

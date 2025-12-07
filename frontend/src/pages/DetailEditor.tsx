@@ -125,7 +125,7 @@ export const DetailEditor: React.FC = () => {
           </Button>
           <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
             <span className="text-xl md:text-2xl">🍌</span>
-            <span className="text-base md:text-xl font-bold truncate">蕉幻</span>
+            <span className="text-base md:text-xl font-bold truncate">MaynorAI</span>
           </div>
           <span className="text-gray-400 hidden md:inline">|</span>
           <span className="text-sm md:text-lg font-semibold truncate hidden sm:inline">编辑页面描述</span>

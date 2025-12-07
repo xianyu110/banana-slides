@@ -18,7 +18,7 @@ from models import db
 from config import Config
 from controllers.material_controller import material_bp, material_global_bp
 from controllers.reference_file_controller import reference_file_bp
-from controllers import project_bp, page_bp, template_bp, user_template_bp, export_bp, file_bp
+from controllers import project_bp, page_bp, template_bp, user_template_bp, export_bp, file_bp, settings_bp
 
 
 # Enable SQLite WAL mode for all connections
@@ -71,6 +71,9 @@ def create_app():
     # AI configuration
     app.config['GOOGLE_API_KEY'] = os.getenv('GOOGLE_API_KEY', '')
     app.config['GOOGLE_API_BASE'] = os.getenv('GOOGLE_API_BASE', '')
+    # Image generation can use different API (optional)
+    app.config['GOOGLE_IMAGE_API_KEY'] = os.getenv('GOOGLE_IMAGE_API_KEY', '')
+    app.config['GOOGLE_IMAGE_API_BASE'] = os.getenv('GOOGLE_IMAGE_API_BASE', '')
     app.config['MAX_DESCRIPTION_WORKERS'] = int(os.getenv('MAX_DESCRIPTION_WORKERS', '5'))
     app.config['MAX_IMAGE_WORKERS'] = int(os.getenv('MAX_IMAGE_WORKERS', '8'))
     app.config['DEFAULT_ASPECT_RATIO'] = "16:9"
@@ -119,6 +122,7 @@ def create_app():
     app.register_blueprint(material_bp)
     app.register_blueprint(material_global_bp)
     app.register_blueprint(reference_file_bp, url_prefix='/api/reference-files')
+    app.register_blueprint(settings_bp)
     
     with app.app_context():
         db.create_all()
@@ -126,13 +130,13 @@ def create_app():
     # Health check endpoint
     @app.route('/health')
     def health_check():
-        return {'status': 'ok', 'message': 'Banana Slides API is running'}
+        return {'status': 'ok', 'message': 'Banana Pro Slides API is running'}
     
     # Root endpoint
     @app.route('/')
     def index():
         return {
-            'name': 'Banana Slides API',
+            'name': 'Banana Pro Slides API',
             'version': '1.0.0',
             'description': 'AI-powered PPT generation service',
             'endpoints': {
@@ -157,7 +161,7 @@ if __name__ == '__main__':
     logging.info(
         "\n"
         "╔══════════════════════════════════════╗\n"
-        "║   🍌 Banana Slides API Server 🍌   ║\n"
+        "║   🍌 Banana Pro Slides API Server 🍌   ║\n"
         "╚══════════════════════════════════════╝\n"
         f"Server starting on: http://localhost:{port}\n"
         f"Environment: {os.getenv('FLASK_ENV', 'development')}\n"

@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { Project, Task, ApiResponse, CreateProjectRequest, Page } from '@/types';
+import type { Project, Task, ApiResponse, CreateProjectRequest, Page, APIConfig, APIPreset } from '@/types';
 
 // ===== 项目相关 API =====
 
@@ -609,6 +609,33 @@ export const associateFileToProject = async (
     `/api/reference-files/${fileId}/associate`,
     { project_id: projectId }
   );
+  return response.data;
+};
+
+// ===== 设置相关 API =====
+
+/**
+ * 获取当前API配置
+ */
+export const getApiConfig = async (): Promise<APIConfig> => {
+  const response = await apiClient.get<APIConfig>('/api/settings/api-config');
+  return response.data;
+};
+
+/**
+ * 更新API配置
+ * @param config API配置（可以只传部分字段）
+ */
+export const updateApiConfig = async (config: Partial<APIConfig>): Promise<{ message: string }> => {
+  const response = await apiClient.put<{ message: string }>('/api/settings/api-config', config);
+  return response.data;
+};
+
+/**
+ * 获取预设的API配置列表
+ */
+export const getApiPresets = async (): Promise<APIPreset[]> => {
+  const response = await apiClient.get<APIPreset[]>('/api/settings/api-presets');
   return response.data;
 };
 

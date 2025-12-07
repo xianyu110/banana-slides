@@ -95,7 +95,7 @@
 
 ## 🎯 功能介绍
 
-### Banana-slides🍌 (aka. 蕉幻) 的亮点
+### Banana-slides🍌 (aka. MaynorAI) 的亮点
 
 - 🚀 **一句话生成 PPT**：从一个简单的想法快速得到大纲、页面描述和最终的 PPT 文稿
 - 🔄 **三种生成路径**：支持从「想法 / 大纲 / 页面描述」三种方式起步，适配不同创作习惯
@@ -134,6 +134,26 @@
 - 默认 16:9 比例，保证在主流显示设备上的观感
 
 
+## 🌐 API配置说明
+
+### 推荐使用中转API
+
+本项目推荐使用中转API服务以获得更稳定的访问体验：
+
+🔗 **API地址**: https://apipro.maynor1024.live/
+
+#### 配置方式
+
+在 `.env` 文件中配置：
+```env
+GOOGLE_API_KEY=your-api-key-here
+GOOGLE_API_BASE=https://apipro.maynor1024.live/v1beta
+```
+
+> **注意**：使用中转API可以有效解决网络访问问题，提升生成速度和稳定性。
+
+---
+
 ## 📦 使用方法
 
 ### 使用 Docker Compose🐳（推荐）
@@ -161,10 +181,10 @@ cd banana-slides
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，配置必要的环境变量：
+编辑 `.env` 文件，配置必要的环境变量（推荐使用中转API）：
 ```env
 GOOGLE_API_KEY=your-google-api-key-here
-GOOGLE_API_BASE=https://generativelanguage.googleapis.com
+GOOGLE_API_BASE=https://apipro.maynor1024.live/v1beta
 ...
 ```
 
@@ -247,10 +267,10 @@ uv sync
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，配置你的 API 密钥：
+编辑 `.env` 文件，配置你的 API 密钥（推荐使用中转API）：
 ```env
 GOOGLE_API_KEY=your-api-key-here
-GOOGLE_API_BASE=https://generativelanguage.googleapis.com
+GOOGLE_API_BASE=https://apipro.maynor1024.live/v1beta
 PORT=5000
 ```
 
@@ -426,6 +446,12 @@ banana-slides/
 ## 📄 许可证
 
 MIT
+
+## 🙏 致谢
+
+特别感谢 [Anionex](https://github.com/Anionex) 开发的原版 [banana-slides](https://github.com/Anionex/banana-slides) 项目！
+
+本项目基于原作者的出色工作进行优化和改进，为用户提供更便捷的部署和使用体验。
 
 ## 📈 项目统计
 

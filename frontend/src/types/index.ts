@@ -104,3 +104,29 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+// API配置
+export interface APIConfig {
+  text_api_key: string;
+  text_api_base: string;
+  image_api_key: string;
+  image_api_base: string;
+  text_api_key_masked?: string;
+  image_api_key_masked?: string;
+}
+
+// API预设
+export interface APIPreset {
+  id: string;
+  name: string;
+  description: string;
+  config: {
+    text_api_base: string;
+    image_api_base: string;
+    requires_key: boolean;
+    text_api_key?: string;  // 预设可以包含默认密钥
+    image_api_key?: string; // 预设可以包含默认密钥
+    image_key_format?: string;
+    warning?: string;
+  };
+}
+

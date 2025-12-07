@@ -10,7 +10,7 @@ from demo import gen_outline, gen_desc, gen_prompts, gen_images_parallel, create
 from datetime import datetime
 
 print("=" * 70)
-print("🍌 蕉幻 - 完整PPT生成流程测试")
+print("🍌 MaynorAI - 完整PPT生成流程测试")
 print("=" * 70)
 print()
 

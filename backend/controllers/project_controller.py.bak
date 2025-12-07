@@ -230,13 +230,9 @@ def generate_outline(project_id):
         
         # Initialize AI service
         from flask import current_app
-        # Get API config from database or environment variables
-        api_config = get_api_config_from_db()
         ai_service = AIService(
-            api_config['api_key'],
-            api_config['api_base'],
-            api_config['image_api_key'],
-            api_config['image_api_base']
+            current_app.config['GOOGLE_API_KEY'],
+            current_app.config['GOOGLE_API_BASE']
         )
         
         # Get reference files content
@@ -349,13 +345,9 @@ def generate_from_description(project_id):
         
         # Initialize AI service
         from flask import current_app
-        # Get API config from database or environment variables
-        api_config = get_api_config_from_db()
         ai_service = AIService(
-            api_config['api_key'],
-            api_config['api_base'],
-            api_config['image_api_key'],
-            api_config['image_api_base']
+            current_app.config['GOOGLE_API_KEY'],
+            current_app.config['GOOGLE_API_BASE']
         )
         
         # Get reference files content
@@ -525,13 +517,9 @@ def generate_descriptions(project_id):
         db.session.commit()
         
         # Initialize AI service
-        # Get API config from database or environment variables
-        api_config = get_api_config_from_db()
         ai_service = AIService(
-            api_config['api_key'],
-            api_config['api_base'],
-            api_config['image_api_key'],
-            api_config['image_api_base']
+            current_app.config['GOOGLE_API_KEY'],
+            current_app.config['GOOGLE_API_BASE']
         )
         
         # Get reference files content
@@ -663,13 +651,9 @@ def generate_images(project_id):
         db.session.commit()
         
         # Initialize services
-        # Get API config from database or environment variables
-        api_config = get_api_config_from_db()
         ai_service = AIService(
-            api_config['api_key'],
-            api_config['api_base'],
-            api_config['image_api_key'],
-            api_config['image_api_base']
+            current_app.config['GOOGLE_API_KEY'],
+            current_app.config['GOOGLE_API_BASE']
         )
         
         from services import FileService

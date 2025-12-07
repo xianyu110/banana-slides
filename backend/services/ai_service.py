@@ -26,20 +26,100 @@ from .prompts import (
 logger = logging.getLogger(__name__)
 
 
+def get_api_config_from_db():
+    """
+    Get API configuration from database or fallback to environment variables
+
+    Returns:
+        dict with keys: api_key, api_base, image_api_key, image_api_base
+    """
+    try:
+        from models.settings import Settings
+
+        return {
+            'api_key': Settings.get_value('GOOGLE_API_KEY', os.getenv('GOOGLE_API_KEY', '')),
+            'api_base': Settings.get_value('GOOGLE_API_BASE', os.getenv('GOOGLE_API_BASE', '')),
+            'image_api_key': Settings.get_value('GOOGLE_IMAGE_API_KEY', os.getenv('GOOGLE_IMAGE_API_KEY', '')),
+            'image_api_base': Settings.get_value('GOOGLE_IMAGE_API_BASE', os.getenv('GOOGLE_IMAGE_API_BASE', '')),
+        }
+    except Exception as e:
+        logger.warning(f"Failed to get API config from database, using environment variables: {e}")
+        return {
+            'api_key': os.getenv('GOOGLE_API_KEY', ''),
+            'api_base': os.getenv('GOOGLE_API_BASE', ''),
+            'image_api_key': os.getenv('GOOGLE_IMAGE_API_KEY', ''),
+            'image_api_base': os.getenv('GOOGLE_IMAGE_API_BASE', ''),
+        }
+
+
 class AIService:
     """Service for AI model interactions using Gemini"""
-    
-    def __init__(self, api_key: str, api_base: str = None):
-        """Initialize AI service with API credentials"""
-        # Always create HttpOptions, matching gemini_genai.py behavior
-        self.client = genai.Client(
+
+    def __init__(self, api_key: str, api_base: str = None,
+                 image_api_key: str = None, image_api_base: str = None):
+        """Initialize AI service with API credentials
+
+        Args:
+            api_key: API key for text generation
+            api_base: API base URL for text generation
+            image_api_key: API key for image generation (optional, defaults to api_key)
+            image_api_base: API base URL for image generation (optional, defaults to api_base)
+        """
+        # Text client - for gemini-2.5-flash (text generation)
+        self.text_client = genai.Client(
             http_options=types.HttpOptions(
                 base_url=api_base
             ),
             api_key=api_key
         )
+
+        # Image client - for gemini-3-pro-image-preview (image generation)
+        # Can use different API endpoint and key
+        self.image_client = genai.Client(
+            http_options=types.HttpOptions(
+                base_url=image_api_base or api_base
+            ),
+            api_key=image_api_key or api_key
+        )
+
+        # Keep legacy client for backward compatibility (文本生成)
+        self.client = self.text_client
+
         self.text_model = "gemini-2.5-flash"
         self.image_model = "gemini-3-pro-image-preview"
+
+        # Store image API credentials for chat-compatible format
+        self.image_api_key = image_api_key or api_key
+        self.image_api_base = image_api_base or api_base
+
+        # Detect if image API uses chat-compatible format (OpenAI-style)
+        # Third-party proxies typically use /v1/chat/completions endpoint
+        self.use_chat_format = self._should_use_chat_format(self.image_api_base)
+        logger.info(f"Image API format: {'Chat-compatible' if self.use_chat_format else 'Native Gemini SDK'}")
+
+    def _should_use_chat_format(self, api_base: str) -> bool:
+        """
+        Detect if the API base URL should use chat-compatible format
+
+        Args:
+            api_base: API base URL
+
+        Returns:
+            True if should use chat format, False for native SDK format
+        """
+        if not api_base:
+            return False
+
+        # Official Google API uses native SDK format
+        if 'generativelanguage.googleapis.com' in api_base or 'googleapis.com' in api_base:
+            return False
+
+        # Third-party proxies typically use chat-compatible format
+        # Common patterns: api.*, apipro.*, etc.
+        if any(pattern in api_base for pattern in ['api.', 'apipro.', '/v1/', 'openai']):
+            return True
+
+        return False
     
     @staticmethod
     def extract_image_urls_from_markdown(text: str) -> List[str]:
@@ -270,26 +350,199 @@ class AIService:
         
         return prompt
     
-    def generate_image(self, prompt: str, ref_image_path: Optional[str] = None, 
+    def _generate_image_chat_format(self, prompt: str, ref_image_path: Optional[str] = None,
+                                   aspect_ratio: str = "16:9", resolution: str = "2K",
+                                   additional_ref_images: Optional[List[Union[str, Image.Image]]] = None) -> Optional[Image.Image]:
+        """
+        Generate image using chat-compatible format (/v1/chat/completions endpoint)
+
+        Args:
+            prompt: Image generation prompt
+            ref_image_path: Path to reference image (optional)
+            aspect_ratio: Image aspect ratio
+            resolution: Image resolution
+            additional_ref_images: Additional reference images
+
+        Returns:
+            PIL Image object or None if failed
+        """
+        import base64
+        from io import BytesIO
+
+        try:
+            # Build messages array with text and images
+            content_items = []
+
+            # Add text prompt
+            content_items.append({
+                "type": "text",
+                "text": prompt
+            })
+
+            # Add main reference image if provided
+            if ref_image_path and os.path.exists(ref_image_path):
+                with Image.open(ref_image_path) as img:
+                    buffered = BytesIO()
+                    img.save(buffered, format="PNG")
+                    img_base64 = base64.b64encode(buffered.getvalue()).decode()
+                    content_items.append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/png;base64,{img_base64}"
+                        }
+                    })
+
+            # Add additional reference images
+            if additional_ref_images:
+                for ref_img in additional_ref_images:
+                    img_obj = None
+                    if isinstance(ref_img, Image.Image):
+                        img_obj = ref_img
+                    elif isinstance(ref_img, str):
+                        if os.path.exists(ref_img):
+                            img_obj = Image.open(ref_img)
+                        elif ref_img.startswith('http://') or ref_img.startswith('https://'):
+                            downloaded_img = self.download_image_from_url(ref_img)
+                            if downloaded_img:
+                                img_obj = downloaded_img
+                        elif ref_img.startswith('/files/mineru/'):
+                            local_path = self._convert_mineru_path_to_local(ref_img)
+                            if local_path and os.path.exists(local_path):
+                                img_obj = Image.open(local_path)
+
+                    if img_obj:
+                        buffered = BytesIO()
+                        img_obj.save(buffered, format="PNG")
+                        img_base64 = base64.b64encode(buffered.getvalue()).decode()
+                        content_items.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{img_base64}"
+                            }
+                        })
+
+            # Build request payload
+            payload = {
+                "model": self.image_model,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": content_items
+                    }
+                ],
+                "max_tokens": 4096
+            }
+
+            # Make HTTP request to chat endpoint
+            url = f"{self.image_api_base.rstrip('/')}/v1/chat/completions"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.image_api_key}"
+            }
+
+            logger.debug(f"Calling chat-compatible API: {url}")
+            response = requests.post(url, json=payload, headers=headers, timeout=120)
+            response.raise_for_status()
+
+            # Parse response
+            result = response.json()
+            logger.debug(f"Chat API response keys: {result.keys()}")
+
+            if 'choices' in result and len(result['choices']) > 0:
+                message = result['choices'][0].get('message', {})
+                content = message.get('content', '')
+
+                logger.debug(f"Response content type: {type(content)}, length: {len(str(content)) if content else 0}")
+                logger.debug(f"Response content preview: {str(content)[:200]}")
+
+                # Content could be:
+                # 1. A data URL: "data:image/png;base64,..."
+                # 2. Pure base64 string
+                # 3. A URL to the image
+                # 4. Text response (error case)
+
+                if not content:
+                    raise ValueError("Empty content in API response")
+
+                # Check if it's a data URL
+                if isinstance(content, str) and content.startswith('data:image'):
+                    # Extract base64 part from data URL
+                    if ',' in content:
+                        base64_data = content.split(',', 1)[1]
+                    else:
+                        raise ValueError("Invalid data URL format")
+                elif isinstance(content, str) and (content.startswith('http://') or content.startswith('https://')):
+                    # It's a URL, download the image
+                    logger.debug(f"Downloading image from URL: {content}")
+                    img_response = requests.get(content, timeout=30)
+                    img_response.raise_for_status()
+                    image = Image.open(BytesIO(img_response.content))
+                    logger.debug("Successfully downloaded and loaded image")
+                    return image
+                else:
+                    # Assume it's pure base64
+                    # First check if it looks like base64
+                    if isinstance(content, str):
+                        # Remove whitespace
+                        base64_data = content.strip()
+                        # Check if it's valid base64-like string
+                        if not base64_data or len(base64_data) < 100:
+                            raise ValueError(f"Content doesn't look like base64 image data. Content preview: {content[:500]}")
+                    else:
+                        raise ValueError(f"Unexpected content type: {type(content)}")
+
+                # Try to decode base64 to image
+                try:
+                    image_data = base64.b64decode(base64_data)
+                    logger.debug(f"Decoded {len(image_data)} bytes of image data")
+
+                    # Check if it looks like valid image data
+                    if len(image_data) < 100:
+                        raise ValueError(f"Decoded data too small to be an image: {len(image_data)} bytes")
+
+                    image = Image.open(BytesIO(image_data))
+                    logger.debug(f"Successfully created image: {image.size}, {image.mode}")
+                    return image
+                except base64.binascii.Error as e:
+                    raise ValueError(f"Invalid base64 data: {str(e)}")
+                except Exception as e:
+                    raise ValueError(f"Failed to decode image data: {str(e)}")
+            else:
+                # Log the full response for debugging
+                logger.error(f"Invalid API response structure: {result}")
+                raise ValueError(f"No valid response from chat API. Response: {result}")
+
+        except Exception as e:
+            error_detail = f"Error generating image (chat format): {type(e).__name__}: {str(e)}"
+            logger.error(error_detail, exc_info=True)
+            raise Exception(error_detail) from e
+
+    def generate_image(self, prompt: str, ref_image_path: Optional[str] = None,
                       aspect_ratio: str = "16:9", resolution: str = "2K",
                       additional_ref_images: Optional[List[Union[str, Image.Image]]] = None) -> Optional[Image.Image]:
         """
         Generate image using Gemini image model
+        Automatically dispatches to appropriate format (native SDK or chat-compatible)
         Based on gemini_genai.py gen_image()
-        
+
         Args:
             prompt: Image generation prompt
             ref_image_path: Path to reference image (optional). If None, will generate based on prompt only.
             aspect_ratio: Image aspect ratio (currently not used, kept for compatibility)
             resolution: Image resolution (currently not used, kept for compatibility)
             additional_ref_images: 额外的参考图片列表，可以是本地路径、URL 或 PIL Image 对象
-        
+
         Returns:
             PIL Image object or None if failed
-        
+
         Raises:
             Exception with detailed error message if generation fails
         """
+        # Dispatch to appropriate format handler
+        if self.use_chat_format:
+            return self._generate_image_chat_format(prompt, ref_image_path, aspect_ratio, resolution, additional_ref_images)
+
+        # Original native SDK format implementation
         try:
             logger.debug(f"Reference image: {ref_image_path}")
             if additional_ref_images:
@@ -340,7 +593,7 @@ class AIService:
                             logger.warning(f"Invalid image reference: {ref_img}, skipping...")
             
             logger.debug(f"Calling Gemini API for image generation with {len(contents) - 1} reference images...")
-            response = self.client.models.generate_content(
+            response = self.image_client.models.generate_content(
                 model=self.image_model,
                 contents=contents,
                 config=types.GenerateContentConfig(

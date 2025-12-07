@@ -1,0 +1,49 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "backend/app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/files/(.*)",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/health",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/dist/$1"
+    }
+  ],
+  "env": {
+    "GOOGLE_API_KEY": "@google_api_key",
+    "GOOGLE_API_BASE": "https://generativelanguage.googleapis.com",
+    "GOOGLE_IMAGE_API_KEY": "@google_image_api_key",
+    "GOOGLE_IMAGE_API_BASE": "@google_image_api_base",
+    "DEFAULT_TEXT_API_KEY": "@default_text_api_key",
+    "DEFAULT_IMAGE_API_KEY": "@default_image_api_key",
+    "SECRET_KEY": "@secret_key",
+    "MINERU_TOKEN": "@mineru_token"
+  },
+  "build": {
+    "env": {
+      "NODE_VERSION": "18"
+    }
+  }
+}
