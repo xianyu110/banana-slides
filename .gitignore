@@ -27,6 +27,11 @@
 !frontend/public/**/*.avif
 *.md
 !README.md
+!DEPLOYMENT.md
+!DOCKER_DEPLOY.md
+!LINUX_DEPLOY.md
+!QUICK_START_LINUX.md
+!SECURITY.md
 *.pyc
 .env
 *.ppt
