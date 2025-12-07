@@ -587,8 +587,36 @@ class AIService:
                 try:
                     # Clean up the base64 data first
                     if isinstance(base64_data, str):
+                        original_length = len(base64_data)
+                        logger.debug(f"Original base64_data length: {original_length}")
+
+                        # Log if there are non-ASCII characters
+                        try:
+                            base64_data.encode('ascii')
+                        except UnicodeEncodeError as e:
+                            logger.warning(f"Found non-ASCII characters in base64 data: {e}")
+                            logger.debug(f"Problematic characters sample: {[hex(ord(c)) for c in base64_data[:200] if ord(c) > 127]}")
+
                         # Remove any whitespace, newlines, etc.
                         base64_data = ''.join(base64_data.split())
+
+                        # Fix non-ASCII characters that might be mixed in
+                        # Sometimes APIs return mixed content with non-base64 characters
+                        # We need to extract only valid base64 characters
+                        import re
+                        # Keep only base64 valid characters: A-Z, a-z, 0-9, +, /, =
+                        cleaned_data = re.sub(r'[^A-Za-z0-9+/=]', '', base64_data)
+
+                        if len(cleaned_data) != len(base64_data):
+                            removed_chars = len(base64_data) - len(cleaned_data)
+                            logger.warning(f"Removed {removed_chars} non-base64 characters from data")
+                            base64_data = cleaned_data
+
+                        # Ensure base64 string length is multiple of 4 (base64 requirement)
+                        padding_needed = (-len(base64_data)) % 4
+                        if padding_needed:
+                            logger.debug(f"Adding {padding_needed} padding characters")
+                            base64_data += '=' * padding_needed
 
                     logger.debug(f"Attempting to decode {len(base64_data)} chars of base64 data")
                     logger.debug(f"Base64 data preview (first 100 chars): {base64_data[:100]}")

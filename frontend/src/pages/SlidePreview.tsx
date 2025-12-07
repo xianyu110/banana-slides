@@ -861,12 +861,88 @@ export const SlidePreview: React.FC = () => {
                 <div className="max-w-5xl w-full">
                   <div className="relative aspect-video bg-white rounded-lg shadow-xl overflow-hidden touch-manipulation">
                     {selectedPage?.generated_image_path ? (
-                      <img
-                        src={imageUrl}
-                        alt={`Slide ${selectedIndex + 1}`}
-                        className="w-full h-full object-contain select-none"
-                        draggable={false}
-                      />
+                      <>
+                        <img
+                          src={imageUrl}
+                          alt={`Slide ${selectedIndex + 1}`}
+                          className="w-full h-full object-contain select-none"
+                          draggable={false}
+                          onError={(e) => {
+                            console.error('Image failed to load:', imageUrl);
+                            // Show error state or fallback
+                            e.currentTarget.style.display = 'none';
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              const errorDiv = document.createElement('div');
+                              errorDiv.className = 'absolute inset-0 flex items-center justify-center bg-gray-100';
+                              errorDiv.innerHTML = `
+                                <div class="text-center">
+                                  <div class="text-6xl mb-4">⚠️</div>
+                                  <p class="text-gray-500 mb-2">图片加载失败</p>
+                                  <p class="text-sm text-gray-400 mb-4">可能是网络问题或图片链接已失效</p>
+                                  <button class="px-4 py-2 bg-banana-500 text-white rounded hover:bg-banana-600 transition-colors"
+                                          onclick="window.open('${imageUrl}', '_blank')">
+                                    尝试直接打开
+                                  </button>
+                                </div>
+                              `;
+                              parent.appendChild(errorDiv);
+                            }
+                          }}
+                        />
+
+                        {/* Download button - enhanced for external URLs */}
+                        <button
+                          onClick={async () => {
+                            const isExternalUrl = selectedPage?.generated_image_path?.startsWith('http');
+                            const downloadUrl = isExternalUrl
+                              ? `/api/proxy/image/download?url=${encodeURIComponent(selectedPage.generated_image_path)}`
+                              : imageUrl;
+
+                            try {
+                              const link = document.createElement('a');
+                              link.href = downloadUrl;
+                              link.download = `slide-${selectedIndex + 1}.png`;
+                              if (isExternalUrl) {
+                                // For external URLs, use a more robust download method
+                                const response = await fetch(downloadUrl);
+                                if (!response.ok) {
+                                  throw new Error('Download failed');
+                                }
+                                const blob = await response.blob();
+                                const blobUrl = URL.createObjectURL(blob);
+                                link.href = blobUrl;
+                                // Trigger download
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                // Clean up
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+                              } else {
+                                // For internal URLs, simple download works
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }
+                              show({ message: '图片下载成功', type: 'success' });
+                            } catch (error) {
+                              console.error('Download error:', error);
+                              show({
+                                message: '下载失败，尝试直接打开图片',
+                                type: 'error',
+                                duration: 5000
+                              });
+                              // Fallback: try to open in new tab
+                              window.open(imageUrl, '_blank');
+                            }
+                          }}
+                          className="absolute top-4 right-4 px-3 py-2 bg-white/90 hover:bg-white rounded-lg shadow-md flex items-center gap-2 text-sm text-gray-700 transition-all"
+                          title="下载图片"
+                        >
+                          <Download size={16} />
+                          <span className="hidden sm:inline">下载</span>
+                        </button>
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-100">
                         <div className="text-center">
