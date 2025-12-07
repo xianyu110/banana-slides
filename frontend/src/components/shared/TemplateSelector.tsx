@@ -6,6 +6,31 @@ import { materialUrlToFile } from '@/components/shared/MaterialSelector';
 import type { Material } from '@/api/endpoints';
 import { ImagePlus, X } from 'lucide-react';
 
+// 硬编码的预设模板（导出供其他组件使用）
+export const PRESET_TEMPLATES: UserTemplate[] = [
+  {
+    id: 'template-1',
+    name: '商务简约',
+    template_image_url: '/templates/13f7b8f1f5858efaf6d91c09cf0f98dd.jpg',
+    source: 'static',
+    template_id: '1',
+  },
+  {
+    id: 'template-2',
+    name: '创意活力',
+    template_image_url: '/templates/22aabcfcfa8a0dcb152376cc749baa4f.jpg',
+    source: 'static',
+    template_id: '2',
+  },
+  {
+    id: 'template-3',
+    name: '科技未来',
+    template_image_url: '/templates/d2138e0b6e15d2f0261be6772c13f7d5.jpg',
+    source: 'static',
+    template_id: '3',
+  },
+];
+
 interface TemplateSelectorProps {
   onSelect: (templateFile: File | null, templateId?: string) => void;
   selectedTemplateId?: string | null;
@@ -37,11 +62,16 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   const loadSystemTemplates = async () => {
     try {
       const response = await getSystemTemplates();
-      if (response.data?.templates) {
+      if (response.data?.templates && response.data.templates.length > 0) {
         setSystemTemplates(response.data.templates);
+      } else {
+        // 如果后端没有返回模板，使用硬编码的预设模板
+        setSystemTemplates(PRESET_TEMPLATES);
       }
     } catch (error: any) {
-      console.error('加载系统模板失败:', error);
+      console.error('加载系统模板失败，使用硬编码的预设模板:', error);
+      // API 失败时使用硬编码的预设模板
+      setSystemTemplates(PRESET_TEMPLATES);
     }
   };
 
@@ -142,9 +172,9 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   }`}
                 >
                   <img
-                    src={getImageUrl(template.template_image_url)}
+                    src={template.source === 'static' ? template.template_image_url : getImageUrl(template.template_image_url)}
                     alt={template.name || 'Template'}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
                   />
                   {selectedPresetTemplateId === template.id && (
                     <div className="absolute inset-0 bg-banana-500 bg-opacity-20 flex items-center justify-center pointer-events-none">
@@ -262,16 +292,33 @@ export const getTemplateFile = async (
   userTemplates: UserTemplate[],
   systemTemplates: UserTemplate[] = []
 ): Promise<File | null> => {
-  // 首先检查是否是系统模板
+  // 首先检查硬编码的预设模板
+  const presetTemplate = PRESET_TEMPLATES.find(t => t.id === templateId);
+  if (presetTemplate) {
+    try {
+      // 直接使用本地路径
+      const response = await fetch(presetTemplate.template_image_url);
+      const blob = await response.blob();
+      const fileName = `${templateId}.jpg`;
+      return new File([blob], fileName, { type: blob.type });
+    } catch (error) {
+      console.error('加载预设模板失败:', error);
+      return null;
+    }
+  }
+
+  // 然后检查是否是系统模板
   const systemTemplate = systemTemplates.find(t => t.id === templateId);
   if (systemTemplate) {
     try {
-      const imageUrl = getImageUrl(systemTemplate.template_image_url);
+      const imageUrl = systemTemplate.source === 'static'
+        ? systemTemplate.template_image_url
+        : getImageUrl(systemTemplate.template_image_url);
       const response = await fetch(imageUrl);
       const blob = await response.blob();
       // 根据模板ID设置文件名
       const fileName = systemTemplate.source === 'static'
-        ? `${templateId}.png`
+        ? `${templateId}.jpg`
         : 'template.png';
       return new File([blob], fileName, { type: blob.type });
     } catch (error) {

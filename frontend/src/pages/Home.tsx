@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Sparkles, FileText, FileEdit, ImagePlus, Paperclip, Palette, Lightbulb, Settings, LogIn, LogOut, UserCircle } from 'lucide-react';
 import { Button, Textarea, Card, useToast, MaterialGeneratorModal, APISettingsModal, ReferenceFileCard, ReferenceFileSelector } from '@/components/shared';
 import { OnboardingGuide } from '@/components/shared/OnboardingGuide';
-import { TemplateSelector, getTemplateFile } from '@/components/shared/TemplateSelector';
+import { TemplateSelector, getTemplateFile, PRESET_TEMPLATES } from '@/components/shared/TemplateSelector';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { listUserTemplates, type UserTemplate, uploadReferenceFile, type ReferenceFile, associateFileToProject } from '@/api/endpoints';
@@ -276,7 +276,7 @@ export const Home: React.FC = () => {
       if (!templateFile && (selectedTemplateId || selectedPresetTemplateId)) {
         const templateId = selectedTemplateId || selectedPresetTemplateId;
         if (templateId) {
-          templateFile = await getTemplateFile(templateId, userTemplates);
+          templateFile = await getTemplateFile(templateId, userTemplates, PRESET_TEMPLATES);
         }
       }
       
