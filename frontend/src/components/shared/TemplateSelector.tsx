@@ -9,25 +9,25 @@ import { ImagePlus, X } from 'lucide-react';
 // 硬编码的预设模板（导出供其他组件使用）
 export const PRESET_TEMPLATES: UserTemplate[] = [
   {
-    id: 'template-1',
-    name: '商务简约',
-    template_image_url: '/templates/13f7b8f1f5858efaf6d91c09cf0f98dd.jpg',
-    source: 'static',
-    template_id: '1',
+    id: 'simple-business',
+    name: '简约商务风格',
+    template_image_url: '/files/user-templates/f4108fa3-e69d-42e7-aef1-9418b2cd77c6/13f7b8f1f5858efaf6d91c09cf0f98dd.jpg',
+    source: 'database',
+    template_id: 'f4108fa3-e69d-42e7-aef1-9418b2cd77c6',
   },
   {
-    id: 'template-2',
-    name: '创意活力',
-    template_image_url: '/templates/22aabcfcfa8a0dcb152376cc749baa4f.jpg',
-    source: 'static',
-    template_id: '2',
+    id: 'modern-tech',
+    name: '现代科技风格',
+    template_image_url: '/files/user-templates/09d3d911-cb9f-4fc7-912d-1de3d554ac6a/22aabcfcfa8a0dcb152376cc749baa4f.jpg',
+    source: 'database',
+    template_id: '09d3d911-cb9f-4fc7-912d-1de3d554ac6a',
   },
   {
-    id: 'template-3',
-    name: '科技未来',
-    template_image_url: '/templates/d2138e0b6e15d2f0261be6772c13f7d5.jpg',
-    source: 'static',
-    template_id: '3',
+    id: 'creative-design',
+    name: '创意设计风格',
+    template_image_url: '/files/user-templates/1aca3e4c-277e-4aa0-96fb-c7d93e7df418/d2138e0b6e15d2f0261be6772c13f7d5.jpg',
+    source: 'database',
+    template_id: '1aca3e4c-277e-4aa0-96fb-c7d93e7df418',
   },
 ];
 
@@ -113,7 +113,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   };
 
   const handleSelectPresetTemplate = (template: UserTemplate) => {
-    onSelect(null, template.id);
+    onSelect(null, template.template_id);
   };
 
   const handleSelectMaterials = async (materials: Material[]) => {
@@ -166,7 +166,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   key={template.id}
                   onClick={() => handleSelectPresetTemplate(template)}
                   className={`aspect-[4/3] rounded-lg border-2 cursor-pointer transition-all relative ${
-                    selectedPresetTemplateId === template.id
+                    selectedPresetTemplateId === template.template_id
                       ? 'border-banana-500 ring-2 ring-banana-200'
                       : 'border-gray-200 hover:border-banana-500'
                   }`}
@@ -176,7 +176,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                     alt={template.name || 'Template'}
                     className="absolute inset-0 w-full h-full object-cover rounded-lg"
                   />
-                  {selectedPresetTemplateId === template.id && (
+                  {selectedPresetTemplateId === template.template_id && (
                     <div className="absolute inset-0 bg-banana-500 bg-opacity-20 flex items-center justify-center pointer-events-none">
                       <span className="text-white font-semibold text-sm">已选择</span>
                     </div>
@@ -293,13 +293,16 @@ export const getTemplateFile = async (
   systemTemplates: UserTemplate[] = []
 ): Promise<File | null> => {
   // 首先检查硬编码的预设模板
-  const presetTemplate = PRESET_TEMPLATES.find(t => t.id === templateId);
+  const presetTemplate = PRESET_TEMPLATES.find(t => t.template_id === templateId || t.id === templateId);
   if (presetTemplate) {
     try {
-      // 直接使用本地路径
-      const response = await fetch(presetTemplate.template_image_url);
+      // 对于数据库源的模板，使用getImageUrl处理路径；对于静态模板直接使用路径
+      const imageUrl = presetTemplate.source === 'database'
+        ? getImageUrl(presetTemplate.template_image_url)
+        : presetTemplate.template_image_url;
+      const response = await fetch(imageUrl);
       const blob = await response.blob();
-      const fileName = `${templateId}.jpg`;
+      const fileName = `${presetTemplate.name}.jpg`;
       return new File([blob], fileName, { type: blob.type });
     } catch (error) {
       console.error('加载预设模板失败:', error);

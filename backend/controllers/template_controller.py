@@ -116,10 +116,11 @@ def get_system_templates():
 
         templates = []
 
-        # 1. Add database templates (the ones we added from img/ directory)
+        # 1. Add database templates (the ones we added from uploads/user-templates/)
         all_templates = UserTemplate.query.all()
         for template in all_templates:
             # Check if this template name matches one of our predefined templates
+            matched = False
             for template_id, template_name in template_mappings.items():
                 if template.name == template_name:
                     templates.append({
@@ -130,7 +131,19 @@ def get_system_templates():
                         'created_at': template.created_at.isoformat() if template.created_at else None,
                         'source': 'database'
                     })
+                    matched = True
                     break
+
+            # 如果没有匹配到预定义模板，也作为普通数据库模板添加
+            if not matched:
+                templates.append({
+                    'template_id': template.id,
+                    'id': f'custom-{template.id[:8]}',  # 使用 ID 前缀避免冲突
+                    'name': template.name or '未命名模板',
+                    'template_image_url': f'/files/user-templates/{template.id}/{template.file_path.split("/")[-1]}',
+                    'created_at': template.created_at.isoformat() if template.created_at else None,
+                    'source': 'database'
+                })
 
         # 2. Add static templates from public/templates/ directory
         static_templates = [
