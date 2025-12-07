@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Sparkles, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Plus, Trash2, CheckSquare, Square } from 'lucide-react';
 import { Button, Loading, useToast, useConfirm } from '@/components/shared';
 import { DescriptionCard } from '@/components/preview/DescriptionCard';
 import { useProjectStore } from '@/store/useProjectStore';
@@ -10,6 +10,8 @@ export const DetailEditor: React.FC = () => {
   const location = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
   const fromHistory = (location.state as any)?.from === 'history';
+  const [selectedPages, setSelectedPages] = useState<Set<string>>(new Set());
+  const [isBatchMode, setIsBatchMode] = useState(false);
   const {
     currentProject,
     syncProject,
@@ -126,6 +128,50 @@ export const DetailEditor: React.FC = () => {
     }
   };
 
+  const handleBatchDelete = () => {
+    if (selectedPages.size === 0) return;
+
+    const count = selectedPages.size;
+    confirm(
+      `确定要删除选中的 ${count} 个页面吗？此操作无法撤销。`,
+      async () => {
+        try {
+          for (const pageId of selectedPages) {
+            await deletePageById(pageId);
+          }
+          setSelectedPages(new Set());
+          setIsBatchMode(false);
+          show({ message: `已删除 ${count} 个页面`, type: 'success' });
+        } catch (error: any) {
+          show({
+            message: `删除失败: ${error.message || '未知错误'}`,
+            type: 'error'
+          });
+        }
+      },
+      { title: '确认批量删除', variant: 'danger' }
+    );
+  };
+
+  const togglePageSelection = (pageId: string) => {
+    const newSelected = new Set(selectedPages);
+    if (newSelected.has(pageId)) {
+      newSelected.delete(pageId);
+    } else {
+      newSelected.add(pageId);
+    }
+    setSelectedPages(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedPages.size === currentProject.pages.length) {
+      setSelectedPages(new Set());
+    } else {
+      const allPageIds = currentProject.pages.map(p => p.id || p.page_id);
+      setSelectedPages(new Set(allPageIds));
+    }
+  };
+
 
   if (!currentProject) {
     return <Loading fullscreen message="加载项目中..." />;
@@ -190,6 +236,17 @@ export const DetailEditor: React.FC = () => {
       <div className="bg-white border-b border-gray-200 px-3 md:px-6 py-3 md:py-4 flex-shrink-0">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3 flex-1">
+            {isBatchMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={selectedPages.size === currentProject.pages.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                onClick={toggleSelectAll}
+                className="text-xs md:text-sm"
+              >
+                {selectedPages.size === currentProject.pages.length ? '取消全选' : '全选'}
+              </Button>
+            )}
             <Button
               variant="primary"
               icon={<Sparkles size={16} className="md:w-[18px] md:h-[18px]" />}
@@ -206,6 +263,27 @@ export const DetailEditor: React.FC = () => {
             >
               新增页面
             </Button>
+            <Button
+              variant={isBatchMode ? "primary" : "ghost"}
+              icon={<CheckSquare size={16} className="md:w-[18px] md:h-[18px]" />}
+              onClick={() => {
+                setIsBatchMode(!isBatchMode);
+                setSelectedPages(new Set());
+              }}
+              className="text-sm md:text-base"
+            >
+              {isBatchMode ? '退出批量' : '批量管理'}
+            </Button>
+            {isBatchMode && selectedPages.size > 0 && (
+              <Button
+                variant="danger"
+                icon={<Trash2 size={16} className="md:w-[18px] md:h-[18px]" />}
+                onClick={handleBatchDelete}
+                className="flex-1 sm:flex-initial text-sm md:text-base"
+              >
+                删除选中 ({selectedPages.size})
+              </Button>
+            )}
             <span className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
               {currentProject.pages.filter((p) => p.description_content).length} /{' '}
               {currentProject.pages.length} 页已完成
@@ -238,6 +316,7 @@ export const DetailEditor: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {currentProject.pages.map((page, index) => {
                 const pageId = page.id || page.page_id;
+                const isSelected = selectedPages.has(pageId);
                 return (
                   <DescriptionCard
                     key={pageId}
@@ -247,6 +326,17 @@ export const DetailEditor: React.FC = () => {
                     onRegenerate={() => handleRegeneratePage(pageId)}
                     onDelete={() => handleDeletePage(pageId, index)}
                     isGenerating={pageId ? !!pageDescriptionGeneratingTasks[pageId] : false}
+                    isBatchMode={isBatchMode}
+                    isSelected={isSelected}
+                    onSelectChange={(selected) => {
+                      if (selected) {
+                        setSelectedPages(new Set([...selectedPages, pageId]));
+                      } else {
+                        const newSelected = new Set(selectedPages);
+                        newSelected.delete(pageId);
+                        setSelectedPages(newSelected);
+                      }
+                    }}
                   />
                 );
               })}

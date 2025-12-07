@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit2, RefreshCw, Trash2 } from 'lucide-react';
+import { Edit2, RefreshCw, Trash2, CheckSquare, Square } from 'lucide-react';
 import { Card, StatusBadge, Button, Modal, Textarea, Skeleton, Markdown } from '@/components/shared';
 import type { Page, DescriptionContent } from '@/types';
 
@@ -10,6 +10,9 @@ interface DescriptionCardProps {
   onRegenerate: () => void;
   onDelete?: () => void;
   isGenerating?: boolean;
+  isBatchMode?: boolean;
+  isSelected?: boolean;
+  onSelectChange?: (selected: boolean) => void;
 }
 
 export const DescriptionCard: React.FC<DescriptionCardProps> = ({
@@ -19,6 +22,9 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({
   onRegenerate,
   onDelete,
   isGenerating = false,
+  isBatchMode = false,
+  isSelected = false,
+  onSelectChange,
 }) => {
   // 从 description_content 提取文本内容
   const getDescriptionText = (descContent: DescriptionContent | undefined): string => {
@@ -57,11 +63,19 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({
 
   return (
     <>
-      <Card className="p-0 overflow-hidden flex flex-col">
+      <Card className={`p-0 overflow-hidden flex flex-col ${isBatchMode ? 'ring-2 ' + (isSelected ? 'ring-blue-500' : 'ring-transparent') : ''}`}>
         {/* 标题栏 */}
         <div className="bg-banana-50 px-4 py-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              {isBatchMode && (
+                <button
+                  onClick={() => onSelectChange && onSelectChange(!isSelected)}
+                  className="flex-shrink-0 text-gray-500 hover:text-blue-600 transition-colors"
+                >
+                  {isSelected ? <CheckSquare size={18} className="text-blue-600" /> : <Square size={18} />}
+                </button>
+              )}
               <span className="font-semibold text-gray-900">第 {index + 1} 页</span>
               {page.part && (
                 <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
@@ -98,7 +112,7 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({
 
         {/* 操作栏 */}
         <div className="border-t border-gray-100 px-4 py-3 flex justify-between items-center mt-auto">
-          {onDelete && (
+          {!isBatchMode && onDelete && (
             <Button
               variant="ghost"
               size="sm"
@@ -110,26 +124,28 @@ export const DescriptionCard: React.FC<DescriptionCardProps> = ({
               删除
             </Button>
           )}
-          <div className="flex gap-2 ml-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={<Edit2 size={16} />}
-              onClick={handleEdit}
-              disabled={generating}
-            >
-              编辑
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={<RefreshCw size={16} className={generating ? 'animate-spin' : ''} />}
-              onClick={onRegenerate}
-              disabled={generating}
-            >
-              {generating ? '生成中...' : '重新生成'}
-            </Button>
-          </div>
+          {!isBatchMode && (
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<Edit2 size={16} />}
+                onClick={handleEdit}
+                disabled={generating}
+              >
+                编辑
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<RefreshCw size={16} className={generating ? 'animate-spin' : ''} />}
+                onClick={onRegenerate}
+                disabled={generating}
+              >
+                {generating ? '生成中...' : '重新生成'}
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
