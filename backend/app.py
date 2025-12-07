@@ -16,6 +16,14 @@ from flask import Flask
 from flask_cors import CORS
 from models import db
 from config import Config
+from default_config import (
+    DEFAULT_TEXT_API_KEY,
+    DEFAULT_TEXT_API_BASE,
+    DEFAULT_IMAGE_API_KEY,
+    DEFAULT_IMAGE_API_BASE,
+    DEFAULT_MINERU_TOKEN,
+    DEFAULT_MINERU_API_BASE
+)
 from controllers.material_controller import material_bp, material_global_bp
 from controllers.reference_file_controller import reference_file_bp
 from controllers import project_bp, page_bp, template_bp, user_template_bp, export_bp, file_bp, settings_bp
@@ -68,21 +76,22 @@ def create_app():
     app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     app.config['ALLOWED_REFERENCE_FILE_EXTENSIONS'] = Config.ALLOWED_REFERENCE_FILE_EXTENSIONS
     
-    # AI configuration
-    app.config['GOOGLE_API_KEY'] = os.getenv('GOOGLE_API_KEY', '')
-    app.config['GOOGLE_API_BASE'] = os.getenv('GOOGLE_API_BASE', '')
+    # AI configuration with built-in defaults
+    # Users can override these by setting environment variables
+    app.config['GOOGLE_API_KEY'] = os.getenv('GOOGLE_API_KEY', DEFAULT_TEXT_API_KEY)
+    app.config['GOOGLE_API_BASE'] = os.getenv('GOOGLE_API_BASE', DEFAULT_TEXT_API_BASE)
     # Image generation can use different API (optional)
-    app.config['GOOGLE_IMAGE_API_KEY'] = os.getenv('GOOGLE_IMAGE_API_KEY', '')
-    app.config['GOOGLE_IMAGE_API_BASE'] = os.getenv('GOOGLE_IMAGE_API_BASE', '')
+    app.config['GOOGLE_IMAGE_API_KEY'] = os.getenv('GOOGLE_IMAGE_API_KEY', DEFAULT_IMAGE_API_KEY)
+    app.config['GOOGLE_IMAGE_API_BASE'] = os.getenv('GOOGLE_IMAGE_API_BASE', DEFAULT_IMAGE_API_BASE)
     app.config['MAX_DESCRIPTION_WORKERS'] = int(os.getenv('MAX_DESCRIPTION_WORKERS', '5'))
     app.config['MAX_IMAGE_WORKERS'] = int(os.getenv('MAX_IMAGE_WORKERS', '8'))
     app.config['DEFAULT_ASPECT_RATIO'] = "16:9"
     app.config['DEFAULT_RESOLUTION'] = "2K"
     app.config['LOG_LEVEL'] = os.getenv('LOG_LEVEL', 'INFO').upper()
-    
-    # MinerU configuration
-    app.config['MINERU_TOKEN'] = os.getenv('MINERU_TOKEN', '')
-    app.config['MINERU_API_BASE'] = os.getenv('MINERU_API_BASE', 'https://mineru.net')
+
+    # MinerU configuration with built-in default
+    app.config['MINERU_TOKEN'] = os.getenv('MINERU_TOKEN', DEFAULT_MINERU_TOKEN)
+    app.config['MINERU_API_BASE'] = os.getenv('MINERU_API_BASE', DEFAULT_MINERU_API_BASE)
     app.config['IMAGE_CAPTION_MODEL'] = os.getenv('IMAGE_CAPTION_MODEL', 'gemini-2.5-flash')
     
     # CORS configuration

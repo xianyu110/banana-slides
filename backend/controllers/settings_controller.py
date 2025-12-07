@@ -56,9 +56,12 @@ def update_api_config():
 @settings_bp.route('/api-presets', methods=['GET'])
 def get_api_presets():
     """Get predefined API configuration presets"""
-    # Get default keys from environment (for built-in preset)
-    default_text_key = os.getenv('DEFAULT_TEXT_API_KEY', '')
-    default_image_key = os.getenv('DEFAULT_IMAGE_API_KEY', '')
+    # Import built-in defaults
+    from default_config import DEFAULT_TEXT_API_KEY, DEFAULT_IMAGE_API_KEY
+
+    # Get default keys from environment or use built-in defaults
+    default_text_key = os.getenv('DEFAULT_TEXT_API_KEY', DEFAULT_TEXT_API_KEY)
+    default_image_key = os.getenv('DEFAULT_IMAGE_API_KEY', DEFAULT_IMAGE_API_KEY)
 
     presets = [
         {
