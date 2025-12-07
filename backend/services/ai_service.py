@@ -457,6 +457,27 @@ class AIService:
             logger.info(f"Chat API response keys: {result.keys()}")
             logger.info(f"Full API response: {json.dumps(result, indent=2, ensure_ascii=False)}")
 
+            # Check if it's a different API format (e.g., from ImageGen model)
+            if 'data' in result and len(result['data']) > 0:
+                # Some APIs return data array with URL
+                data = result['data'][0]
+                if 'url' in data:
+                    image_url = data['url']
+                    logger.info(f"Found image URL in response: {image_url}")
+                    # Download the image
+                    img_response = requests.get(image_url, timeout=30)
+                    img_response.raise_for_status()
+                    image = Image.open(BytesIO(img_response.content))
+                    logger.info("Successfully downloaded and loaded image from URL")
+                    return image
+                elif 'b64_json' in data:
+                    # Some APIs return base64 JSON
+                    base64_data = data['b64_json']
+                    image_data = base64.b64decode(base64_data)
+                    image = Image.open(BytesIO(image_data))
+                    logger.info("Successfully loaded image from base64_json")
+                    return image
+
             if 'choices' in result and len(result['choices']) > 0:
                 message = result['choices'][0].get('message', {})
                 content = message.get('content', '')
