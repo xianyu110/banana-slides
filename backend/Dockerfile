@@ -4,13 +4,6 @@ FROM python:3.10-slim-bookworm
 # 设置工作目录
 WORKDIR /app
 
-# 安装系统依赖
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 # 安装 uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 RUN chmod +x /usr/local/bin/uv
@@ -40,7 +33,7 @@ ENV FLASK_APP=backend/app.py
 EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ["sh", "-c", "curl -f http://localhost:${PORT:-5000}/health || exit 1"]
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health').read()"]
 
 # 启动应用
 CMD ["uv", "run", "--directory", "backend", "python", "app.py"]
