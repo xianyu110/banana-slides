@@ -29,6 +29,34 @@ export const PRESET_TEMPLATES: UserTemplate[] = [
     source: 'static',
     template_id: 'creative-design',
   },
+  {
+    id: 'template-b',
+    name: '科技蓝',
+    template_image_url: '/templates/template_b.png',
+    source: 'static',
+    template_id: 'template-b',
+  },
+  {
+    id: 'template-g',
+    name: '活力色彩',
+    template_image_url: '/templates/template_g.png',
+    source: 'static',
+    template_id: 'template-g',
+  },
+  {
+    id: 'template-s',
+    name: '简约商务',
+    template_image_url: '/templates/template_s.png',
+    source: 'static',
+    template_id: 'template-s',
+  },
+  {
+    id: 'template-y',
+    name: '复古卷轴',
+    template_image_url: '/templates/template_y.png',
+    source: 'static',
+    template_id: 'template-y',
+  },
 ];
 
 interface TemplateSelectorProps {
