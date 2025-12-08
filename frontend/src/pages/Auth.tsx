@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Mail, Lock, User, ArrowLeft, Github, Chrome, Eye, EyeOff } from 'lucide-react';
 import { Button, useToast } from '@/components/shared';
 import { useAuthStore } from '@/store/useAuthStore';
-import { login, register, getOAuthAuthorizationUrl, handleOAuthCallback } from '@/api/auth';
 
 type AuthMode = 'login' | 'register';
 
@@ -13,7 +12,14 @@ export const Auth: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { show, ToastContainer } = useToast();
-  const { login: loginStore } = useAuthStore();
+  const {
+    loginWithEmail,
+    registerWithEmail,
+    loginWithOAuth,
+    initializeAuth,
+    isAuthenticated,
+    isLoading: authLoading,
+  } = useAuthStore();
 
   const [mode, setMode] = useState<AuthMode>('login');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,46 +32,30 @@ export const Auth: React.FC = () => {
     username: '',
   });
 
-  // 处理 OAuth 回调
+  // 初始化认证状态
   useEffect(() => {
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    const provider = searchParams.get('provider') as 'google' | 'github' | null;
+    initializeAuth();
+  }, []);
 
-    if (code && state && provider) {
-      handleOAuthCallbackFlow(provider, code, state);
+  // 如果已登录，重定向到首页
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
     }
-  }, [searchParams]);
+  }, [isAuthenticated, navigate]);
 
-  const handleOAuthCallbackFlow = async (
-    provider: 'google' | 'github',
-    code: string,
-    state: string
-  ) => {
-    setIsLoading(true);
-    try {
-      const response = await handleOAuthCallback(provider, code, state);
-      if (response.success && response.data) {
-        const { user, tokens } = response.data;
-        const authTokens = {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
-        };
-        loginStore(user, authTokens);
-        show({ message: t('auth:login_success'), type: 'success' });
-        navigate('/');
-      }
-    } catch (error: any) {
-      console.error('OAuth callback error:', error);
+  // 处理 OAuth 回调（Supabase 会自动处理，这里只需要检查 URL 参数）
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+
+    if (error) {
       show({
-        message: error?.response?.data?.error?.message || t('auth:oauth_error'),
+        message: errorDescription || t('auth:oauth_error'),
         type: 'error',
       });
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,40 +72,33 @@ export const Auth: React.FC = () => {
 
     setIsLoading(true);
     try {
-      let response;
+      let result;
       if (mode === 'login') {
-        response = await login({
-          email: formData.email,
-          password: formData.password,
-        });
+        result = await loginWithEmail(formData.email, formData.password);
       } else {
-        response = await register({
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-        });
+        result = await registerWithEmail(
+          formData.email,
+          formData.password,
+          formData.username
+        );
       }
 
-      if (response.success && response.data) {
-        const { user, tokens } = response.data;
-        const authTokens = {
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
-        };
-        loginStore(user, authTokens);
+      if (result.success) {
         show({
           message: mode === 'login' ? t('auth:login_success') : t('auth:register_success'),
           type: 'success',
         });
         navigate('/');
+      } else {
+        show({
+          message: result.error || (mode === 'login' ? t('auth:login_error') : t('auth:register_error')),
+          type: 'error',
+        });
       }
     } catch (error: any) {
       console.error('Auth error:', error);
       show({
-        message:
-          error?.response?.data?.error?.message ||
-          (mode === 'login' ? t('auth:login_error') : t('auth:register_error')),
+        message: error.message || (mode === 'login' ? t('auth:login_error') : t('auth:register_error')),
         type: 'error',
       });
     } finally {
@@ -125,15 +108,18 @@ export const Auth: React.FC = () => {
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     try {
-      const response = await getOAuthAuthorizationUrl(provider);
-      if (response.success && response.data.authorization_url) {
-        // 重定向到 OAuth 授权页面
-        window.location.href = response.data.authorization_url;
+      const result = await loginWithOAuth(provider);
+      if (!result.success) {
+        show({
+          message: result.error || t('auth:oauth_error'),
+          type: 'error',
+        });
       }
+      // 如果成功，Supabase 会自动重定向
     } catch (error: any) {
       console.error('OAuth error:', error);
       show({
-        message: error?.response?.data?.error?.message || t('auth:oauth_error'),
+        message: error.message || t('auth:oauth_error'),
         type: 'error',
       });
     }
@@ -182,7 +168,7 @@ export const Auth: React.FC = () => {
           <div className="space-y-3 mb-6">
             <button
               onClick={() => handleOAuthLogin('google')}
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
               <Chrome size={20} />
@@ -191,7 +177,7 @@ export const Auth: React.FC = () => {
 
             <button
               onClick={() => handleOAuthLogin('github')}
-              disabled={isLoading}
+              disabled={isLoading || authLoading}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-900 dark:bg-gray-700 border border-gray-800 dark:border-gray-600 rounded-lg text-white hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
             >
               <Github size={20} />
@@ -287,7 +273,7 @@ export const Auth: React.FC = () => {
 
             <Button
               type="submit"
-              loading={isLoading}
+              loading={isLoading || authLoading}
               className="w-full bg-gradient-to-r from-banana-500 to-orange-500 hover:from-banana-600 hover:to-orange-600 text-black font-semibold py-3"
             >
               {mode === 'login' ? t('auth:login') : t('auth:register')}

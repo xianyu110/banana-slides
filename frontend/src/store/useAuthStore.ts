@@ -1,5 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import {
+  supabaseLogin,
+  supabaseRegister,
+  supabaseLogout,
+  supabaseOAuthLogin,
+  supabaseGetSession,
+  onAuthStateChange,
+} from '@/api/supabaseAuth';
+import * as legacyAuth from '@/api/auth';
 
 export interface User {
   id: string;
@@ -22,6 +32,7 @@ interface AuthState {
   tokens: AuthTokens | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  authMode: 'supabase' | 'legacy'; // 当前使用的认证模式
 
   // Actions
   login: (user: User, tokens: AuthTokens) => void;
@@ -30,9 +41,16 @@ interface AuthState {
   setTokens: (tokens: AuthTokens) => void;
   setLoading: (loading: boolean) => void;
 
+  // Supabase 认证方法
+  loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  registerWithEmail: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithOAuth: (provider: 'google' | 'github') => Promise<{ success: boolean; error?: string }>;
+  initializeAuth: () => Promise<void>;
+
   // 辅助方法
   isTokenExpired: () => boolean;
   getAccessToken: () => string | null;
+  isUsingSupabase: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -43,8 +61,14 @@ export const useAuthStore = create<AuthState>()(
       tokens: null,
       isAuthenticated: false,
       isLoading: false,
+      authMode: isSupabaseConfigured() ? 'supabase' : 'legacy',
 
-      // 登录
+      // 检查是否使用 Supabase
+      isUsingSupabase: () => {
+        return isSupabaseConfigured();
+      },
+
+      // 登录（设置状态）
       login: (user, tokens) => {
         set({
           user,
@@ -54,7 +78,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       // 登出
-      logout: () => {
+      logout: async () => {
+        const { authMode } = get();
+
+        if (authMode === 'supabase' && isSupabaseConfigured()) {
+          await supabaseLogout();
+        }
+
         set({
           user: null,
           tokens: null,
@@ -85,6 +115,212 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: loading });
       },
 
+      // 邮箱登录
+      loginWithEmail: async (email, password) => {
+        set({ isLoading: true });
+
+        try {
+          if (isSupabaseConfigured()) {
+            // 使用 Supabase 登录
+            const result = await supabaseLogin(email, password);
+
+            if (result.success && result.data) {
+              const { user, tokens } = result.data;
+              const authTokens: AuthTokens = {
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token,
+                expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+              };
+              set({
+                user,
+                tokens: authTokens,
+                isAuthenticated: true,
+                authMode: 'supabase',
+              });
+              return { success: true };
+            }
+
+            return { success: false, error: result.error };
+          } else {
+            // 使用原有后端登录
+            const response = await legacyAuth.login({ email, password });
+
+            if (response.success && response.data) {
+              const { user, tokens } = response.data;
+              const authTokens: AuthTokens = {
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token,
+                expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+              };
+              set({
+                user,
+                tokens: authTokens,
+                isAuthenticated: true,
+                authMode: 'legacy',
+              });
+              return { success: true };
+            }
+
+            return { success: false, error: '登录失败' };
+          }
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error?.response?.data?.error?.message || error.message || '登录失败',
+          };
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      // 邮箱注册
+      registerWithEmail: async (email, password, username) => {
+        set({ isLoading: true });
+
+        try {
+          if (isSupabaseConfigured()) {
+            // 使用 Supabase 注册
+            const result = await supabaseRegister(email, password, username);
+
+            if (result.success && result.data) {
+              const { user, tokens } = result.data;
+              const authTokens: AuthTokens = {
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token,
+                expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+              };
+              set({
+                user,
+                tokens: authTokens,
+                isAuthenticated: true,
+                authMode: 'supabase',
+              });
+              return { success: true };
+            }
+
+            return { success: false, error: result.error };
+          } else {
+            // 使用原有后端注册
+            const response = await legacyAuth.register({ email, password, username });
+
+            if (response.success && response.data) {
+              const { user, tokens } = response.data;
+              const authTokens: AuthTokens = {
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token,
+                expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+              };
+              set({
+                user,
+                tokens: authTokens,
+                isAuthenticated: true,
+                authMode: 'legacy',
+              });
+              return { success: true };
+            }
+
+            return { success: false, error: '注册失败' };
+          }
+        } catch (error: any) {
+          return {
+            success: false,
+            error: error?.response?.data?.error?.message || error.message || '注册失败',
+          };
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      // OAuth 登录
+      loginWithOAuth: async (provider) => {
+        if (isSupabaseConfigured()) {
+          const result = await supabaseOAuthLogin(provider);
+          return result;
+        } else {
+          // 使用原有后端 OAuth
+          try {
+            const response = await legacyAuth.getOAuthAuthorizationUrl(provider);
+            if (response.success && response.data.authorization_url) {
+              window.location.href = response.data.authorization_url;
+              return { success: true };
+            }
+            return { success: false, error: 'OAuth 初始化失败' };
+          } catch (error: any) {
+            return {
+              success: false,
+              error: error?.response?.data?.error?.message || error.message || 'OAuth 失败',
+            };
+          }
+        }
+      },
+
+      // 初始化认证状态（应用启动时调用）
+      initializeAuth: async () => {
+        if (isSupabaseConfigured()) {
+          // 检查 Supabase 会话
+          const result = await supabaseGetSession();
+
+          if (result.success && result.data) {
+            const { user, tokens } = result.data;
+            const authTokens: AuthTokens = {
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token,
+              expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in,
+            };
+            set({
+              user,
+              tokens: authTokens,
+              isAuthenticated: true,
+              authMode: 'supabase',
+            });
+          }
+
+          // 监听认证状态变化
+          onAuthStateChange((event, session) => {
+            console.log('[Auth] State changed:', event);
+
+            if (event === 'SIGNED_IN' && session?.user) {
+              const user: User = {
+                id: session.user.id,
+                email: session.user.email || '',
+                username: session.user.user_metadata?.username ||
+                          session.user.user_metadata?.name ||
+                          session.user.email?.split('@')[0] ||
+                          'User',
+                avatar_url: session.user.user_metadata?.avatar_url,
+                auth_provider: (session.user.app_metadata?.provider as 'email' | 'google' | 'github') || 'email',
+                preferred_language: session.user.user_metadata?.preferred_language,
+              };
+              const authTokens: AuthTokens = {
+                access_token: session.access_token,
+                refresh_token: session.refresh_token || '',
+                expires_at: Math.floor(Date.now() / 1000) + (session.expires_in || 3600),
+              };
+              set({
+                user,
+                tokens: authTokens,
+                isAuthenticated: true,
+                authMode: 'supabase',
+              });
+            } else if (event === 'SIGNED_OUT') {
+              set({
+                user: null,
+                tokens: null,
+                isAuthenticated: false,
+              });
+            } else if (event === 'TOKEN_REFRESHED' && session) {
+              set({
+                tokens: {
+                  access_token: session.access_token,
+                  refresh_token: session.refresh_token || '',
+                  expires_at: Math.floor(Date.now() / 1000) + (session.expires_in || 3600),
+                },
+              });
+            }
+          });
+        }
+      },
+
       // 检查 token 是否过期
       isTokenExpired: () => {
         const { tokens } = get();
@@ -110,6 +346,7 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         tokens: state.tokens,
         isAuthenticated: state.isAuthenticated,
+        authMode: state.authMode,
       }),
     }
   )
