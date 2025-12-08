@@ -610,16 +610,7 @@ export const Home: React.FC = () => {
             >
               🔗 友情链接
             </a>
-            <span className="hidden sm:inline">·</span>
-            <a
-              href="https://github.com/xianyu110/banana-slides"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:underline transition-colors"
-            >
-              GitHub
-            </a>
-          </div>
+            </div>
         </div>
       </footer>
 

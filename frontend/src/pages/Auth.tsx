@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock, User, ArrowLeft, Github, Chrome, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, Chrome, Eye, EyeOff } from 'lucide-react';
 import { Button, useToast } from '@/components/shared';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -175,15 +175,7 @@ export const Auth: React.FC = () => {
               <span>{t('auth:continue_with_google')}</span>
             </button>
 
-            <button
-              onClick={() => handleOAuthLogin('github')}
-              disabled={isLoading || authLoading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-gray-900 dark:bg-gray-700 border border-gray-800 dark:border-gray-600 rounded-lg text-white hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
-            >
-              <Github size={20} />
-              <span>{t('auth:continue_with_github')}</span>
-            </button>
-          </div>
+            </div>
 
           {/* 分隔线 */}
           <div className="relative mb-6">
