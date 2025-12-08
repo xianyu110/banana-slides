@@ -260,6 +260,7 @@ export const Auth: React.FC = () => {
                   }
                   className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-banana-500 focus:border-transparent text-gray-900 dark:text-gray-100 transition-colors"
                   placeholder={t('auth:password_placeholder')}
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -269,6 +270,9 @@ export const Auth: React.FC = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                密码至少 6 个字符
+              </p>
             </div>
 
             <Button
@@ -295,8 +299,26 @@ export const Auth: React.FC = () => {
             </button>
           </div>
 
+          {/* 登录模式下的提示 */}
+          {mode === 'login' && (
+            <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <p className="text-xs text-amber-800 dark:text-amber-300 text-center">
+                🆕 新用户？请先点击上方「注册」按钮创建账号
+              </p>
+            </div>
+          )}
+
+          {/* 注册模式下的提示 */}
+          {mode === 'register' && (
+            <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-xs text-green-800 dark:text-green-300 text-center">
+                ✅ 注册成功后将自动登录，无需验证邮箱
+              </p>
+            </div>
+          )}
+
           {/* 提示：可选登录 */}
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
               💡 {t('auth:optional_login_hint')}
             </p>
