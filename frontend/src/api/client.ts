@@ -8,7 +8,13 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 // 创建 axios 实例
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 300000, // 5分钟超时（AI生成可能很慢）
+  timeout: 600000, // 10分钟超时（AI生成和文件解析可能很慢）
+});
+
+// 文件上传专用的 axios 实例（更长的超时时间）
+export const fileUploadClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 660000, // 11分钟超时（文件解析需要更长时间）
 });
 
 // 请求拦截器
@@ -25,7 +31,25 @@ apiClient.interceptors.request.use(
       // 对于非 FormData 请求，默认设置为 JSON
       config.headers['Content-Type'] = 'application/json';
     }
-    
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// 文件上传客户端的请求拦截器
+fileUploadClient.interceptors.request.use(
+  (config) => {
+    // 文件上传总是使用 FormData
+    if (config.headers) {
+      delete config.headers['Content-Type'];
+    }
+
+    // 添加上传进度提示
+    console.log('开始上传文件，这可能需要几分钟时间...');
+
     return config;
   },
   (error) => {
@@ -49,6 +73,33 @@ apiClient.interceptors.response.use(
     } else {
       // 其他错误
       console.error('Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
+// 文件上传客户端的响应拦截器
+fileUploadClient.interceptors.response.use(
+  (response) => {
+    console.log('文件上传和处理完成');
+    return response;
+  },
+  (error) => {
+    // 特殊处理文件上传超时
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      console.error('文件处理超时！这通常是因为文件太大或内容太复杂。');
+      console.error('建议：');
+      console.error('1. 尝试上传较小的文件（< 10MB）');
+      console.error('2. 减少PPT页数');
+      console.error('3. 移除复杂的图片和动画');
+    }
+
+    if (error.response) {
+      console.error('文件上传错误:', error.response.data);
+    } else if (error.request) {
+      console.error('网络错误:', error.request);
+    } else {
+      console.error('错误:', error.message);
     }
     return Promise.reject(error);
   }

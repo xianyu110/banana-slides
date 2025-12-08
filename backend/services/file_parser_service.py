@@ -270,30 +270,39 @@ class FileParserService:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.mineru_token}"
         }
-        
+
         result_url = self.get_result_api_template.format(batch_id)
         start_time = time.time()
-        
+        last_log_time = start_time
+
         while True:
-            if time.time() - start_time > max_wait_time:
+            current_time = time.time()
+            elapsed_time = int(current_time - start_time)
+
+            if current_time - start_time > max_wait_time:
                 error_msg = f"Parsing timeout after {max_wait_time} seconds"
                 logger.error(error_msg)
                 return None, error_msg
-            
+
             try:
                 response = requests.get(result_url, headers=headers, timeout=30)
                 response.raise_for_status()
                 task_info = response.json()
-                
+
                 if task_info.get("code") != 0:
                     error_msg = f"Failed to query task status: {task_info.get('msg')}"
                     logger.error(error_msg)
                     return None, error_msg
-                
+
                 task_status = task_info["data"]["extract_result"][0]["state"]
-                
+
+                # Log progress every 30 seconds
+                if current_time - last_log_time > 30:
+                    logger.info(f"File parsing in progress... Status: {task_status}, Elapsed: {elapsed_time}s")
+                    last_log_time = current_time
+
                 if task_status == "done":
-                    logger.info("File parsing completed!")
+                    logger.info(f"File parsing completed! Total time: {elapsed_time}s")
                     full_zip_url = task_info["data"]["extract_result"][0]["full_zip_url"]
                     # Download and extract markdown
                     return self._download_markdown(full_zip_url)
@@ -303,9 +312,9 @@ class FileParserService:
                     logger.error(error_msg)
                     return None, error_msg
                 else:
-                    logger.debug(f"Current task status: {task_status}, waiting...")
+                    logger.debug(f"Current task status: {task_status}, waiting... (elapsed: {elapsed_time}s)")
                     time.sleep(2)  # Wait 2 seconds before next poll
-                    
+
             except requests.exceptions.RequestException as e:
                 logger.warning(f"Network error while polling result: {str(e)}, retrying...")
                 time.sleep(2)

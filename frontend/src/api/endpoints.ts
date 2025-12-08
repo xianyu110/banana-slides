@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient, fileUploadClient } from './client';
 import type { Project, Task, ApiResponse, CreateProjectRequest, Page, APIConfig, APIPreset } from '@/types';
 
 // ===== 项目相关 API =====
@@ -34,7 +34,7 @@ export const uploadTemplate = async (
   const formData = new FormData();
   formData.append('template_image', templateImage);
   
-  const response = await apiClient.post<ApiResponse<{ template_image_url: string }>>(
+  const response = await fileUploadClient.post<ApiResponse<{ template_image_url: string }>>(
     `/api/projects/${projectId}/template`,
     formData
   );
@@ -202,7 +202,7 @@ export const editPageImage = async (
       formData.append('context_images', file);
     });
     
-    const response = await apiClient.post<ApiResponse>(
+    const response = await fileUploadClient.post<ApiResponse>(
       `/api/projects/${projectId}/pages/${pageId}/edit/image`,
       formData
     );
@@ -377,7 +377,7 @@ export const generateMaterialImage = async (
     });
   }
 
-  const response = await apiClient.post<ApiResponse<{ image_url: string; relative_path: string }>>(
+  const response = await fileUploadClient.post<ApiResponse<{ image_url: string; relative_path: string }>>(
     `/api/projects/${projectId}/materials/generate`,
     formData
   );
@@ -452,7 +452,7 @@ export const uploadMaterial = async (
     url = `/api/projects/${projectId}/materials/upload`;
   }
   
-  const response = await apiClient.post<ApiResponse<Material>>(url, formData);
+  const response = await fileUploadClient.post<ApiResponse<Material>>(url, formData);
   return response.data;
 };
 
@@ -487,7 +487,7 @@ export const uploadUserTemplate = async (
     formData.append('name', name);
   }
   
-  const response = await apiClient.post<ApiResponse<UserTemplate>>(
+  const response = await fileUploadClient.post<ApiResponse<UserTemplate>>(
     '/api/user-templates',
     formData
   );
@@ -553,7 +553,7 @@ export const uploadReferenceFile = async (
     formData.append('project_id', projectId);
   }
   
-  const response = await apiClient.post<ApiResponse<{ file: ReferenceFile }>>(
+  const response = await fileUploadClient.post<ApiResponse<{ file: ReferenceFile }>>(
     '/api/reference-files/upload',
     formData
   );
