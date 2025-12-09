@@ -123,13 +123,38 @@ ${ideaPrompt}
     // 使用自定义 API 调用
     const text = await this.callGeminiAPI(prompt, this.textModel);
     
-    // 提取 JSON
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      throw new Error('无法解析大纲 JSON');
+    console.log('[Gemini] 原始响应:', text.substring(0, 200) + '...');
+    
+    // 提取 JSON（支持多种格式）
+    let jsonText = text;
+    
+    // 1. 尝试提取 markdown 代码块中的 JSON
+    const codeBlockMatch = text.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+    if (codeBlockMatch) {
+      jsonText = codeBlockMatch[1];
+    } else {
+      // 2. 尝试提取纯 JSON 数组
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
     }
-
-    return JSON.parse(jsonMatch[0]);
+    
+    // 清理 JSON 文本
+    jsonText = jsonText
+      .replace(/,(\s*[}\]])/g, '$1') // 移除尾随逗号
+      .replace(/\n/g, ' ') // 移除换行
+      .replace(/\s+/g, ' '); // 压缩空格
+    
+    console.log('[Gemini] 清理后的 JSON:', jsonText.substring(0, 200) + '...');
+    
+    try {
+      return JSON.parse(jsonText);
+    } catch (error) {
+      console.error('[Gemini] JSON 解析失败:', error);
+      console.error('[Gemini] 原始文本:', text);
+      throw new Error(`无法解析大纲 JSON: ${error.message}`);
+    }
   }
 
   /**
@@ -168,12 +193,29 @@ ${outlineText}
 
     const text = await this.callGeminiAPI(prompt, this.textModel);
     
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      throw new Error('无法解析大纲 JSON');
+    // 提取并清理 JSON
+    let jsonText = text;
+    const codeBlockMatch = text.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+    if (codeBlockMatch) {
+      jsonText = codeBlockMatch[1];
+    } else {
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
+      }
     }
-
-    return JSON.parse(jsonMatch[0]);
+    
+    jsonText = jsonText
+      .replace(/,(\s*[}\]])/g, '$1')
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ');
+    
+    try {
+      return JSON.parse(jsonText);
+    } catch (error) {
+      console.error('[Gemini] JSON 解析失败:', error);
+      throw new Error(`无法解析大纲 JSON: ${error.message}`);
+    }
   }
 
   /**
