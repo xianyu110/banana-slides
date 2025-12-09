@@ -28,11 +28,54 @@ export class GeminiService {
   private genAI: GoogleGenerativeAI;
   private textModel: string;
   private imageModel: string;
+  private apiKey: string;
+  private apiBase: string;
+  private useCustomBase: boolean;
 
   constructor(config: GeminiConfig) {
-    this.genAI = new GoogleGenerativeAI(config.apiKey);
+    this.apiKey = config.apiKey;
     this.textModel = config.textModel || 'gemini-2.0-flash-exp';
     this.imageModel = config.imageModel || 'gemini-2.0-flash-exp';
+    this.apiBase = config.apiBase || 'https://apipro.maynor1024.live';
+    
+    // 判断是否使用自定义 API Base（非官方 Google API）
+    this.useCustomBase = !this.apiBase.includes('googleapis.com');
+    
+    // 如果使用官方 API，初始化 SDK
+    if (!this.useCustomBase) {
+      this.genAI = new GoogleGenerativeAI(config.apiKey);
+    } else {
+      // 使用自定义 API Base 时，不初始化 SDK
+      console.log('[Gemini] 使用自定义 API Base:', this.apiBase);
+    }
+  }
+
+  /**
+   * 使用 fetch 直接调用 Gemini API（支持自定义 API Base）
+   */
+  private async callGeminiAPI(prompt: string, model: string): Promise<string> {
+    const url = `${this.apiBase}/v1beta/models/${model}:generateContent`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': this.apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Gemini API 调用失败: ${response.status} ${error}`);
+    }
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
   }
 
   /**
@@ -42,8 +85,6 @@ export class GeminiService {
     ideaPrompt: string,
     language: string = 'zh'
   ): Promise<OutlineItem[]> {
-    const model = this.genAI.getGenerativeModel({ model: this.textModel });
-
     const prompt = `你是一个专业的 PPT 大纲生成助手。请根据用户的想法生成一个结构清晰的 PPT 大纲。
 
 用户想法：
@@ -79,8 +120,8 @@ ${ideaPrompt}
 
 请直接返回 JSON，不要包含任何其他文字。`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    // 使用自定义 API 调用
+    const text = await this.callGeminiAPI(prompt, this.textModel);
     
     // 提取 JSON
     const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -98,8 +139,6 @@ ${ideaPrompt}
     outlineText: string,
     language: string = 'zh'
   ): Promise<OutlineItem[]> {
-    const model = this.genAI.getGenerativeModel({ model: this.textModel });
-
     const prompt = `你是一个专业的 PPT 大纲解析助手。请将用户输入的大纲文本解析为结构化的 JSON 格式。
 
 用户大纲：
@@ -127,8 +166,7 @@ ${outlineText}
 
 请直接返回 JSON，不要包含任何其他文字。`;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const text = await this.callGeminiAPI(prompt, this.textModel);
     
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
@@ -148,8 +186,6 @@ ${outlineText}
     pageIndex: number,
     language: string = 'zh'
   ): Promise<string> {
-    const model = this.genAI.getGenerativeModel({ model: this.textModel });
-
     const outlineText = this.formatOutlineText(outline);
 
     const prompt = `你是一个专业的 PPT 内容生成助手。请为指定的页面生成详细的内容描述。
@@ -173,8 +209,7 @@ ${outlineText}
 
 请直接返回页面描述文本，不要包含 JSON 或其他格式。`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    return await this.callGeminiAPI(prompt, this.textModel);
   }
 
   /**
@@ -185,8 +220,6 @@ ${outlineText}
     outline: OutlineItem[],
     pageIndex: number
   ): Promise<string> {
-    const model = this.genAI.getGenerativeModel({ model: this.textModel });
-
     const outlineText = this.formatOutlineText(outline);
 
     const prompt = `你是一个专业的 PPT 页面设计助手。请根据页面描述生成一个详细的图片生成提示词。
@@ -206,8 +239,7 @@ ${outlineText}
 
 请直接返回提示词文本。`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    return await this.callGeminiAPI(prompt, this.textModel);
   }
 
   /**
@@ -251,11 +283,11 @@ ${outlineText}
     }
 
     // 调用 chat 兼容格式的 API
-    const response = await fetch(`${this.genAI.apiKey}/v1/chat/completions`, {
+    const response = await fetch(`${this.apiBase}/v1/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.genAI.apiKey}`
+        'Authorization': `Bearer ${this.apiKey}`
       },
       body: JSON.stringify({
         model: this.imageModel,
