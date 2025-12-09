@@ -34,8 +34,8 @@ export class GeminiService {
 
   constructor(config: GeminiConfig) {
     this.apiKey = config.apiKey;
-    this.textModel = config.textModel || 'gemini-2.0-flash-exp';
-    this.imageModel = config.imageModel || 'gemini-2.0-flash-exp';
+    this.textModel = config.textModel || 'gemini-2.5-flash';
+    this.imageModel = config.imageModel || 'gemini-2.5-flash';
     this.apiBase = config.apiBase || 'https://apipro.maynor1024.live';
     
     // 判断是否使用自定义 API Base（非官方 Google API）

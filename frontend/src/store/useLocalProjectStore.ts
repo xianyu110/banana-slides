@@ -238,7 +238,8 @@ export const useLocalProjectStore = create<LocalProjectState>((set, get) => ({
       const gemini = new GeminiService({
         apiKey: settings.geminiApiKey,
         textModel: settings.geminiTextModel,
-        imageModel: settings.geminiImageModel
+        imageModel: settings.geminiImageModel,
+        apiBase: settings.geminiApiBase
       });
 
       let outline;
@@ -318,7 +319,8 @@ export const useLocalProjectStore = create<LocalProjectState>((set, get) => ({
     try {
       const gemini = new GeminiService({
         apiKey: settings.geminiApiKey,
-        textModel: settings.geminiTextModel
+        textModel: settings.geminiTextModel,
+        apiBase: settings.geminiApiBase
       });
 
       // 重建大纲结构
@@ -397,7 +399,8 @@ export const useLocalProjectStore = create<LocalProjectState>((set, get) => ({
       const gemini = new GeminiService({
         apiKey: settings.geminiApiKey,
         textModel: settings.geminiTextModel,
-        imageModel: settings.geminiImageModel
+        imageModel: settings.geminiImageModel,
+        apiBase: settings.geminiApiBase
       });
 
       // 生成图片提示词

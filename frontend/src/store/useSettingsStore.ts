@@ -41,8 +41,8 @@ interface SettingsState extends APISettings {
 const DEFAULT_SETTINGS: APISettings = {
   geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
   geminiApiBase: import.meta.env.VITE_GEMINI_API_BASE || 'https://apipro.maynor1024.live',
-  geminiTextModel: import.meta.env.VITE_GEMINI_TEXT_MODEL || 'gemini-2.0-flash-exp',
-  geminiImageModel: import.meta.env.VITE_GEMINI_IMAGE_MODEL || 'gemini-2.0-flash-exp',
+  geminiTextModel: import.meta.env.VITE_GEMINI_TEXT_MODEL || 'gemini-2.5-flash',
+  geminiImageModel: import.meta.env.VITE_GEMINI_IMAGE_MODEL || 'gemini-2.5-flash',
   
   mineruToken: import.meta.env.VITE_MINERU_TOKEN || '',
   mineruApiBase: import.meta.env.VITE_MINERU_API_BASE || 'https://mineru.net/api/v4',
